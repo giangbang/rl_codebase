@@ -30,6 +30,7 @@ def evaluate_policy(env, agent, deterministic: bool=True,
     if save_video_to is not None:
         os.makedirs(save_video_to, exist_ok=True)
         save_vid = True
+        assert env.render_mode is not None
     else:
         save_vid = False
 
@@ -81,15 +82,21 @@ def evaluate_policy(env, agent, deterministic: bool=True,
 def _get_frames_from_VecEnv(env, stop_record):
     frames = []
     for e, s in zip(env.envs, stop_record):
-        frame = e.render('rgb_array') if not s else None
+        if not s:
+            frame = e.render('rgb_array')
+            frame = np.array(frame)
+            if len(frame.shape) > 3: frame = np.squeeze(frame)
+        else: frame = None
         frames.append(frame)
     return frames
 
 def write_video_from_ndarray(frames: List[np.ndarray], filename:str):
-    w, h = 150, 125
+    import cv2
+    assert filename.endswith('.mp4')
+    h, w = frames[0].shape[:2]
     fps = 50
 
-    fourcc = cv2.VideoWriter_fourcc(*'MP42') 
+    fourcc = cv2.VideoWriter_fourcc(*'MP4V') 
     video = cv2.VideoWriter(filename, fourcc, float(fps), (w, h))
 
     for frame in frames:
