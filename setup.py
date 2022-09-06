@@ -9,8 +9,10 @@ setup(
     author_email="banggiangle2015@gmail.com",
     install_requires=[
         "torch",
+        "torchvision",
         "gym",
         "numpy",
-        "matplotlib"
+        "matplotlib",
+        "opencv-python",
     ],
 )
