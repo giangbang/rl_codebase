@@ -30,13 +30,13 @@ def evaluate_policy(env, agent, deterministic: bool=True,
     if save_video_to is not None:
         os.makedirs(save_video_to, exist_ok=True)
         save_vid = True
-        assert env.render_mode is not None
     else:
         save_vid = False
 
     report = {}
 
     if isinstance(env, gym.Env):
+    	if save_vid: assert env.render_mode is not None
         env = gym.vector.SyncVectorEnv([lambda: env])
 
     num_episodes = np.zeros((env.num_envs,), dtype=int)
