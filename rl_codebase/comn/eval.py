@@ -36,7 +36,7 @@ def evaluate_policy(env, agent, deterministic: bool=True,
     report = {}
 
     if isinstance(env, gym.Env):
-    	if save_vid: assert env.render_mode is not None
+        if save_vid: assert env.render_mode is not None
         env = gym.vector.SyncVectorEnv([lambda: env])
 
     num_episodes = np.zeros((env.num_envs,), dtype=int)
@@ -56,8 +56,8 @@ def evaluate_policy(env, agent, deterministic: bool=True,
         num_episodes += done
 
         if save_vid:
-            frames.append( _get_frames_from_VecEnv(env, stop_record) )
             stop_record = np.bitwise_or(done, stop_record)
+            frames.append( _get_frames_from_VecEnv(env, stop_record) )
 
     total_return /= num_eval_episodes
 
@@ -78,12 +78,11 @@ def evaluate_policy(env, agent, deterministic: bool=True,
 
     return report
 
-
 def _get_frames_from_VecEnv(env, stop_record):
     frames = []
     for e, s in zip(env.envs, stop_record):
         if not s:
-            frame = e.render('rgb_array')
+            frame = e.render()
             frame = np.array(frame)
             if len(frame.shape) > 3: frame = np.squeeze(frame)
         else: frame = None
@@ -101,6 +100,7 @@ def write_video_from_ndarray(frames: List[np.ndarray], filename:str):
 
     for frame in frames:
         if frame is not None:
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             video.write(frame)
 
     video.release()
