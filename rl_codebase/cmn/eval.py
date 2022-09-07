@@ -41,6 +41,9 @@ def evaluate_policy(env, agent, deterministic: bool=True,
 
     num_episodes = np.zeros((env.num_envs,), dtype=int)
     total_return = np.zeros((env.num_envs,), dtype=float)
+    success_rate = np.zeros((env.num_envs,), dtype=float)
+    
+    has_success_metric = False # Some envs do not support success measure
 
     state = env.reset()
     if save_vid:
@@ -54,12 +57,20 @@ def evaluate_policy(env, agent, deterministic: bool=True,
         
         total_return += reward * (num_episodes < num_eval_episodes)
         num_episodes += done
+        
+        if 'success' in info or 'is_success' in info:
+            success = info.get('success', info.get('is_success'))
+            success = np.array(success, dtype=float)
+            has_success_metric = True
+            assert success.shape == success_rate.shape
+            success_rate += success
 
         if save_vid:
             stop_record = np.bitwise_or(done, stop_record)
             frames.append( _get_frames_from_VecEnv(env, stop_record) )
 
     total_return /= num_eval_episodes
+    success_rate /= num_eval_episodes
 
     if task_names is None:
         task_names = [f'task_{i}' for i in range(env.num_envs)] 
@@ -67,8 +78,13 @@ def evaluate_policy(env, agent, deterministic: bool=True,
     if report_seperated_task:
         for task_name, reward in zip(task_names, total_return):
             report[f'eval.{task_name}.rewards'] = reward
+        if has_success_metric:
+            for task_name, success in zip(task_names, success_rate):
+                report[f'eval.{task_name}.success'] = success
     else:
         report['eval.rewards'] = np.mean(total_return)
+        if has_success_metric:
+            report['eval.success'] = np.mean(success_rate)
 
     if save_vid:
         frames = list(zip(*frames))
