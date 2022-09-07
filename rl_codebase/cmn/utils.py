@@ -1,6 +1,7 @@
 # these functions in this file are borrowed from stable-baselines3
 from typing import Dict, Tuple, Union
 from gym import spaces
+import numpy as np
 
 def get_obs_shape(
     observation_space: spaces.Space,
