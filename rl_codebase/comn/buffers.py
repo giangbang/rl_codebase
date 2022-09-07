@@ -29,14 +29,14 @@ class ReplayBuffer(object):
         self.capacity = capacity
         self.batch_size = batch_size
         self.device = device
-        self.num_envs = num_envs
         
         if num_envs is None:
-            self.num_envs = 1
+            num_envs = 1
             self.is_multitask_buffer = False
         else: 
             self.is_multitask_buffer = True
         
+        self.num_envs = num_envs
         self.obs_shape = get_obs_shape(observation_space)
         self.action_dim = get_action_dim(action_space)
         self.is_image_obs = is_image_space(observation_space)
@@ -57,6 +57,12 @@ class ReplayBuffer(object):
 
     def add(self, obs, action, reward, next_obs, done, info=None):
         '''Add a new transition to replay buffer'''
+        obs = np.array(obs).reshape(self.obses.shape[1:])
+        action = np.array(action).reshape(self.actions.shape[1:])
+        reward = np.array(reward).reshape(self.rewards.shape[1:])
+        next_obs = np.array(next_obs).reshape(self.next_obses.shape[1:])
+        done = np.array(done).reshape(self.dones.shape[1:])
+
         np.copyto(self.obses[self.idx], obs)
         np.copyto(self.actions[self.idx], action)
         np.copyto(self.rewards[self.idx], reward)
