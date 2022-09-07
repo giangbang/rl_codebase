@@ -1,6 +1,7 @@
 # these functions in this file are borrowed from stable-baselines3
-from typing import Dict, Tuple, Union
+from typing import Dict, Tuple, Union, List
 from gym import spaces
+import gym
 import numpy as np
 
 def get_obs_shape(
@@ -63,3 +64,20 @@ def is_image_space(observation_space: spaces.Space) -> bool:
         if np.any(observation_space.low != 0) or np.any(observation_space.high != 255):
             return False
     return False
+
+def get_observation_space(env: gym.Env):
+    if isinstance(env, gym.vector.VectorEnv):
+        return env.single_observation_space
+    return env.observation_space
+
+def get_action_space(env: gym.Env):
+    if isinstance(env, gym.vector.VectorEnv):
+        return env.single_action_space
+    return env.action_space
+
+def wrap_vec_env(env: List[gym.Env]):
+    if isinstance(env, gym.vector.VectorEnv):
+        return env
+    if not isinstance(env, list):
+        env = [env]
+    return gym.vector.SyncVectorEnv([lambda: e for e in env])

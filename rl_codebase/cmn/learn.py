@@ -1,4 +1,7 @@
 import gym
+from .utils import wrap_vec_env
+import sys
+import time
 
 def collect_transitions(env, agent, total_timesteps, start_step):
     """
@@ -18,12 +21,14 @@ def collect_transitions(env, agent, total_timesteps, start_step):
         run with `total_timesteps` steps, making total of 
         `total_timesteps*num_envs` steps
     :return: a tuple (states, actions, rewards, next_state, done, info)
-        at every timestep
+        at every timestep, and some additional info as python dict (time_elapsed, etc)
     """
     
     if not isinstance(env, gym.vector.VectorEnv):
-        env = gym.vector.SyncVectorEnv([lambda: env])
+        env = wrap_vec_env(env)
     
+    start_time = time.time_ns()
+
     state = env.reset()
     for step in range(total_timesteps):
         if step < start_step:
@@ -32,8 +37,18 @@ def collect_transitions(env, agent, total_timesteps, start_step):
             action = agent.select_action(state, deterministic=False)
         
         next_state, reward, done, info = env.step(action)
-        
-        yield state, action, reward, next_state, done, info
+
+        # report 
+        time_elapsed = max((time.time_ns()-start_time) / 1e9, sys.float_info.epsilon)
+        num_timestep = (step+1)*env.num_envs
+        fps = int(num_timestep/time_elapsed)
+        report = {
+            'time.time_elapsed': time_elapsed,
+            'time.total_timesteps': num_timestep,
+            'time.fps': fps,
+        }
+
+        yield (state, action, reward, next_state, done, info), report
         state = next_state
     
     env.close()

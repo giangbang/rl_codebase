@@ -35,6 +35,7 @@ class CNN(nn.Module):
     The code is taken from stable-baselines3, with some modifications.
 	"""
 	def __init__(self, n_input_channels: int, features_dim: int=512):
+        super().__init__()
 		from torchvision.transforms import Resize
 		self.cnn = nn.Sequential(
 			Resize((84, 84)), # input image is resized to 84x84

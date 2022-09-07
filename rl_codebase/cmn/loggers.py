@@ -29,9 +29,10 @@ class Logger:
         return pd.DataFrame(self.name_to_vals)
     
     def dump(self):
+        print('='*30)
         for key, val in self.name_to_vals.items():
-            print(f"{key} : {val[-1]:.2f}")
+            print(f"{key:<20} : {val[-1]:.2f}")
             
     def dump_file(self):
         df = self.to_df()
-        df.to_csv(self.file_dir)
+        df.to_csv(self.file_dir, float_format='%.2f')
