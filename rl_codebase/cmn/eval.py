@@ -11,7 +11,7 @@ def evaluate_policy(env, agent, deterministic: bool=True,
     Evaluate the `agent` on the given `env`.
 
     :param env: Environment on which the agent is evaluated, should be an
-        instance of `gym.Env` or `gym.VecEnv`, the latter will be treated as 
+        instance of `gym.Env` or `gym.VectorEnv`, the latter will be treated as 
         multitask environment.
     :param agent: agent, should implement a function `select_action`, which 
         takes two inputs: the current `state` and a flag `deterministic`.
@@ -35,7 +35,7 @@ def evaluate_policy(env, agent, deterministic: bool=True,
 
     report = {}
 
-    if isinstance(env, gym.Env):
+    if not isinstance(env, gym.vector.VectorEnv):
         if save_vid: assert env.render_mode is not None
         env = gym.vector.SyncVectorEnv([lambda: env])
 
