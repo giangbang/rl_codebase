@@ -27,18 +27,18 @@ class MLP(nn.Module):
         return self.net(x)
 
 class CNN(nn.Module):
-	"""
-	CNN from DQN Nature paper:
+    """
+    CNN from DQN Nature paper:
         Mnih, Volodymyr, et al.
         "Human-level control through deep reinforcement learning."
         Nature 518.7540 (2015): 529-533.
     The code is taken from stable-baselines3, with some modifications.
-	"""
-	def __init__(self, n_input_channels: int, features_dim: int=512):
+    """
+    def __init__(self, n_input_channels: int, features_dim: int=512):
         super().__init__()
-		from torchvision.transforms import Resize
-		self.cnn = nn.Sequential(
-			Resize((84, 84)), # input image is resized to 84x84
+        from torchvision.transforms import Resize
+        self.cnn = nn.Sequential(
+            Resize((84, 84)), # input image is resized to 84x84
             nn.Conv2d(n_input_channels, 32, kernel_size=8, stride=4, padding=0), # 32x20x20
             nn.ReLU(),
             nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=0), # 64x9x9
@@ -50,5 +50,5 @@ class CNN(nn.Module):
         )
 
     def forward(self, obs):
-    	obs = (obs-128)/128 # normalize input
-    	return self.cnn(obs)
+        obs = (obs-128)/128 # normalize input
+        return self.cnn(obs)

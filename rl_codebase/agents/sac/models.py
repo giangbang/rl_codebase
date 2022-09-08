@@ -2,11 +2,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import gym
+import numpy as np
 
 from rl_codebase.cmn import (
     create_net,
     get_action_dim,
-    get_obs_shape
+    get_obs_shape,
+    MLP, 
+    CNN
 )
 
 class ContinuousSACActor(nn.Module):
@@ -79,8 +82,8 @@ class DoubleQNet(nn.Module):
         action_dim = get_action_dim(action_space)
         inputs_dim = state_dim + action_dim
         
-        self.q1 = MLP(inputs_dim, 1, n_layer, n_unit)
-        self.q2 = MLP(inputs_dim, 1, n_layer, n_unit)
+        self.q1 = MLP(inputs_dim, 1, num_layer, hidden_dim)
+        self.q2 = MLP(inputs_dim, 1, num_layer, hidden_dim)
 
         
     def forward(self, x, a):

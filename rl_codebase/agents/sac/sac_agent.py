@@ -31,7 +31,7 @@ class SAC:
         if eval_env and not isinstance(eval_env, gym.vector.VectorEnv):
             eval_env = wrap_vec_env(eval_env)
             
-        self.env = self.env
+        self.env = env
         self.eval_env = eval_env
         
         self.agents = [

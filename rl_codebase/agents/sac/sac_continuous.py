@@ -19,7 +19,7 @@ class ContinuousSAC(nn.Module):
         init_temperature=.2,
         device='cpu',
     ):
-
+        super().__init__()
         self.gamma = gamma
         self.tau = tau
         self.device = device

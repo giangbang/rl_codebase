@@ -4,3 +4,4 @@ from .learn import collect_transitions
 from .loggers import Logger
 from .create_nets import create_net
 from .utils import *
+from .networks import MLP, CNN
