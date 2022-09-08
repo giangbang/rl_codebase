@@ -19,9 +19,9 @@ pip install -e .
 
 Some popular RL algorithms have been implemented in `rl_codebase` to provide quick benchmarking.
 
-	- [x] SAC
-	- [ ] Distral
-	- [ ] PCGrad
+- [x] SAC
+- [ ] Distral
+- [ ] PCGrad
 
 ### Example
 
