@@ -2,6 +2,7 @@ import os
 import gym
 import numpy as np
 from typing import List
+from .utils import wrap_vec_env
 
 def evaluate_policy(env, agent, deterministic: bool=True, 
     num_eval_episodes: int=10, save_video_to:str=None,
@@ -37,7 +38,7 @@ def evaluate_policy(env, agent, deterministic: bool=True,
 
     if not isinstance(env, gym.vector.VectorEnv):
         if save_vid: assert env.render_mode is not None
-        env = gym.vector.SyncVectorEnv([lambda: env])
+        env = wrap_vec_env(env)
 
     num_episodes = np.zeros((env.num_envs,), dtype=int)
     total_return = np.zeros((env.num_envs,), dtype=float)

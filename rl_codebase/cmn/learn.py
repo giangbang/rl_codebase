@@ -28,6 +28,7 @@ def collect_transitions(env, agent, total_timesteps, start_step):
         env = wrap_vec_env(env)
     
     start_time = time.time_ns()
+    report = {}
 
     state = env.reset()
     for step in range(total_timesteps):
@@ -42,11 +43,10 @@ def collect_transitions(env, agent, total_timesteps, start_step):
         time_elapsed = max((time.time_ns()-start_time) / 1e9, sys.float_info.epsilon)
         num_timestep = (step+1)*env.num_envs
         fps = int(num_timestep/time_elapsed)
-        report = {
-            'time.time_elapsed': time_elapsed,
-            'time.total_timesteps': num_timestep,
-            'time.fps': fps,
-        }
+        
+        report['time.time_elapsed'] = time_elapsed
+        report['time.total_timesteps'] = num_timestep
+        report['time.fps'] = fps
 
         yield (state, action, reward, next_state, done, info), report
         state = next_state
