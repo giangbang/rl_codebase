@@ -4,32 +4,32 @@ import torch.nn.functional as F
 import gym
 
 from rl_codebase.cmn import (
-	create_net,
-	get_action_dim,
-	get_obs_shape
+    create_net,
+    get_action_dim,
+    get_obs_shape
 )
 
 class ContinuousSACActor(nn.Module):
-	def __init__(
-		self,
-		observation_space: gym.spaces,
-		action_space: gym.spaces,
-		num_layer: int=3,
-		hidden_dim=256,
-	):
-		super().__init__()
-		self.log_std_min    = -10
+    def __init__(
+        self,
+        observation_space: gym.spaces,
+        action_space: gym.spaces,
+        num_layer: int=3,
+        hidden_dim=256,
+    ):
+        super().__init__()
+        self.log_std_min    = -10
         self.log_std_max    = 2
         self.action_dim 	= get_action_dim(action_space)
 
         self.actor = create_net(observation_space, self.action_dim,
-        		num_layer, hidden_dim)
+                num_layer, hidden_dim)
 
     def forward(self, x):
-    	return self.actor(x).chunk(2, dim=-1)
+        return self.actor(x).chunk(2, dim=-1)
 
     def sample(self, x, compute_log_pi=False, deterministic:bool=False):
-    	'''
+        '''
         Sample action from policy, return sampled actions and log prob of that action
         In inference time, set the sampled actions to be deterministic
         
@@ -67,16 +67,16 @@ class ContinuousSACActor(nn.Module):
         return squashed_action, log_squash
 
 class DoubleQNet(nn.Module):
-	def __init__(
-		self,
-		observation_space: gym.spaces,
-		action_space: gym.spaces,
-		num_layer: int=3,
-		hidden_dim=256,
-	):
-	    super().__init__()
-	    state_dim = np.prod(get_obs_shape(observation_space))
-	    action_dim = get_action_dim(action_space)
+    def __init__(
+        self,
+        observation_space: gym.spaces,
+        action_space: gym.spaces,
+        num_layer: int=3,
+        hidden_dim=256,
+    ):
+        super().__init__()
+        state_dim = np.prod(get_obs_shape(observation_space))
+        action_dim = get_action_dim(action_space)
         inputs_dim = state_dim + action_dim
         
         self.q1 = MLP(inputs_dim, 1, n_layer, n_unit)
@@ -91,12 +91,12 @@ class DoubleQNet(nn.Module):
 
 class Critic(nn.Module):
     def __init__(
-		self,
-		observation_space: gym.spaces,
-		action_space: gym.spaces,
-		num_layer: int=3,
-		hidden_dim=256,
-	):
+        self,
+        observation_space: gym.spaces,
+        action_space: gym.spaces,
+        num_layer: int=3,
+        hidden_dim=256,
+    ):
         super().__init__()
         
         self._online_q = DoubleQNet(observation_space, action_space, num_layer, hidden_dim)

@@ -1,30 +1,30 @@
 from rl_codebase.cmn import (
-	ReplayBuffer,
-	evaluate_policy,
-	collect_transitions,
-	Logger
+    ReplayBuffer,
+    evaluate_policy,
+    collect_transitions,
+    Logger
 )
 from rl_codebase.cmn.utils import *
 from .sac_continuous import ContinuousSAC
 import gym
 
 class SAC:
-	def __init__(
-		self, 
-		env,
+    def __init__(
+        self, 
+        env,
         eval_env, 
-		learning_rate:float=3e-4,
-		buffer_size: int = 1_000_000,  # 1e6
+        learning_rate:float=3e-4,
+        buffer_size: int = 1_000_000,  # 1e6
         learning_starts: int = 100,
         batch_size: int = 256,
         tau: float = 0.005,
         gamma: float = 0.99,
         num_layers=3,
-		hidden_dim=256,
+        hidden_dim=256,
         init_temperature=.2,
         device: str = 'cpu',
         log_path=None,
-	):
+    ):
         if not isinstance(env, gym.vector.VectorEnv):
             env = wrap_vec_env(env)
             

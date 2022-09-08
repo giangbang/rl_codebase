@@ -1,38 +1,38 @@
 from rl_codebase.cmn import (
-	get_action_dim,
-	get_obs_shape,
-	get_observation_space,
-	get_action_space
+    get_action_dim,
+    get_obs_shape,
+    get_observation_space,
+    get_action_space
 )
 import torch
 from .models import *
 
 class ContinuousSAC(nn.Module):
-	def __init__(
-		self, 
-		env, 
-		learning_rate:float=3e-4, 
-		gamma:float=0.99, 
-		tau:float=0.005,
-		num_layers=3,
-		hidden_dim=256,
+    def __init__(
+        self, 
+        env, 
+        learning_rate:float=3e-4, 
+        gamma:float=0.99, 
+        tau:float=0.005,
+        num_layers=3,
+        hidden_dim=256,
         init_temperature=.2,
         device='cpu',
-	):
+    ):
 
-		self.gamma = gamma
-		self.tau = tau
-		self.device = device
+        self.gamma = gamma
+        self.tau = tau
+        self.device = device
 
-		observation_space = get_observation_space(env)
-		action_space = get_action_space(env)
+        observation_space = get_observation_space(env)
+        action_space = get_action_space(env)
 
-		action_dim = get_action_dim(action_space)
+        action_dim = get_action_dim(action_space)
 
-		self.actor  = ContinuousSACActor(observation_space, action_space, num_layers, 
+        self.actor  = ContinuousSACActor(observation_space, action_space, num_layers, 
                 hidden_dim).to(device)
          
-		self.critic = Critic(obs_shape, action_shape, num_layers, hidden_dim).to(device)
+        self.critic = Critic(obs_shape, action_shape, num_layers, hidden_dim).to(device)
         
         self.target_entropy = -np.prod(action_dim)
 
@@ -46,7 +46,7 @@ class ContinuousSAC(nn.Module):
         )
         
         self.log_ent_coef = torch.log(init_temperature*
-        	torch.ones(1, device=device)).requires_grad_(True)
+            torch.ones(1, device=device)).requires_grad_(True)
         
         self.ent_coef_optimizer = torch.optim.Adam([self.log_ent_coef], 
             lr=learning_rate,
