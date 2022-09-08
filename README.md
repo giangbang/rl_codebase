@@ -36,7 +36,7 @@ eval_env = gym.make('LunarLanderContinuous-v2', render_mode='rgb_array')
 agent = SAC(env, eval_env, log_path='logging')
 agent.learn(total_timesteps=1000000000, start_step=1000, eval_freq=2000)
 ```
-The codebase follows a sklearn-like syntax and bears much resemblance from Stable-Baselines3](https://github.com/DLR-RM/stable-baselines3) syntax. But unlike Stable-baselines3, one can have the algorithms run with multi-task environment.
+The codebase follows a sklearn-like syntax and bears much resemblance from [Stable-Baselines3](https://github.com/DLR-RM/stable-baselines3) syntax. But unlike Stable-baselines3, one can have the algorithms run with multi-task environment.
 ```python
 import metaworld
 import random
