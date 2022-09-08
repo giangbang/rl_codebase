@@ -36,7 +36,7 @@ class SAC:
         
         self.agents = [
             ContinuousSAC(env, learning_rate, gamma, tau, num_layers, hidden_dim,
-                init_temperature)
+                init_temperature, device)
             for _ in range(env.num_envs)
         ]
         self.observation_space = get_observation_space(env)
@@ -56,9 +56,26 @@ class SAC:
         return np.array(action).reshape(len(action), -1)
         
     def update(self, buffer):
+        report = {}
+        critic_losses, actor_losses, alpha_losses = [], [], []
+        alpha = []
         batch = buffer.sample()
         for i, a in enumerate(self.agents):
-            a.update(batch.get_task(i))
+            critic_loss, actor_loss, alpha_loss = a.update(batch.get_task(i))
+            
+            critic_losses.append(critic_loss)
+            actor_losses.append(actor_loss)
+            alpha_losses.append(alpha_loss)
+            alpha.append(a.log_ent_coef.exp().detach().item())
+
+        report = {
+            'train.critic_loss': np.mean(critic_losses),
+            'train.actor_loss': np.mean(actor_losses),
+            'train.alpha_loss': np.mean(alpha_losses),
+            'train.alpha': np.mean(alpha)
+        }
+        return report
+
     
     def learn(self, 
         total_timesteps,
@@ -67,19 +84,20 @@ class SAC:
         n_eval_episodes: int = 10,
         train_freq: int=1,
     ):
-        for step, (transition, report_train) in enumerate(collect_transitions(self.env,
+        for step, (transition, time_report) in enumerate(collect_transitions(self.env,
                 self, total_timesteps, start_step)):
             state, action, reward, next_state, done, info = transition
             
             self.buffer.add(state, action, reward, next_state, done, info)
             
             if step % train_freq == 0:
-                self.update(self.buffer)
+                train_report = self.update(self.buffer)
                 
             if step % eval_freq == 0:
-                self.logger.dict_record(report_train)
-                eval_results = evaluate_policy(self.eval_env, self, 
+                self.logger.dict_record(time_report)
+                self.logger.dict_record(train_report)
+                eval_report = evaluate_policy(self.eval_env, self, 
                     num_eval_episodes=n_eval_episodes)
-                self.logger.dict_record(eval_results)
+                self.logger.dict_record(eval_report)
                 self.logger.dump()
         self.logger.dump_file(self.log_path)
