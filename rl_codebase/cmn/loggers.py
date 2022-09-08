@@ -1,6 +1,6 @@
 
 class Logger:
-    def _init__(self, log_dir=None, file_name='progress.csv'):
+    def __init__(self, log_dir=None, file_name='progress.csv'):
         self.log_dir = log_dir
         self.log_to_file = log_dir is not None
         self.name_to_vals = {}

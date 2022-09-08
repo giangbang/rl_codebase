@@ -32,7 +32,7 @@ class ContinuousSAC(nn.Module):
         self.actor  = ContinuousSACActor(observation_space, action_space, num_layers, 
                 hidden_dim).to(device)
          
-        self.critic = Critic(obs_shape, action_shape, num_layers, hidden_dim).to(device)
+        self.critic = Critic(observation_space, action_space, num_layers, hidden_dim).to(device)
         
         self.target_entropy = -np.prod(action_dim)
 
@@ -62,7 +62,7 @@ class ContinuousSAC(nn.Module):
             ent_coef    = torch.exp(self.log_ent_coef)
             next_q_val  = next_q_val - ent_coef * next_log_pi
             
-            target_q_val= self.reward_scale*batch.rewards + (1-batch.dones)*self.discount*next_q_val
+            target_q_val= batch.rewards + (1-batch.dones)*self.gamma*next_q_val
             
         current_q_vals  = self.critic.online_q(batch.states, batch.actions)
         critic_loss     = .5*sum(F.mse_loss(current_q, target_q_val) for current_q in current_q_vals)
@@ -71,7 +71,7 @@ class ContinuousSAC(nn.Module):
         critic_loss.backward()
         self.critic_optimizer.step()
         
-        self.critic.polyak_update(self.critic_tau)
+        self.critic.polyak_update(self.tau)
         
         return critic_loss.item()
         
@@ -114,4 +114,6 @@ class ContinuousSAC(nn.Module):
      
     def select_action(self, state, deterministic=True):
         with torch.no_grad():
+            state = torch.FloatTensor(state)
+            if len(state.shape) == 1: state = state.unsqueeze(0)
             return self.actor.sample(state, deterministic=deterministic)[0].cpu().numpy()

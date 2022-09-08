@@ -25,7 +25,7 @@ class ContinuousSACActor(nn.Module):
         self.log_std_max    = 2
         self.action_dim 	= get_action_dim(action_space)
 
-        self.actor = create_net(observation_space, self.action_dim,
+        self.actor = create_net(observation_space, self.action_dim*2,
                 num_layer, hidden_dim)
 
     def forward(self, x):

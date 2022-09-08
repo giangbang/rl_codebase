@@ -42,11 +42,11 @@ class SAC:
         self.observation_space = get_observation_space(env)
         self.action_space = get_action_space(env)
         self.buffer = ReplayBuffer(self.observation_space, self.action_space, buffer_size,
-            device, env.num_envs)
+            batch_size, device, env.num_envs)
             
         self.device = device
         self.log_path = log_path
-        self.logger = Logger(log_path)
+        self.logger = Logger(log_dir=log_path)
         
     def select_action(self, state, deterministic:bool=False):
         action = []
