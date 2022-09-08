@@ -45,6 +45,7 @@ class SAC:
             device, env.num_envs)
             
         self.device = device
+        self.log_path = log_path
         self.logger = Logger(log_path)
         
     def select_action(self, state, deterministic:bool=False):
@@ -52,12 +53,12 @@ class SAC:
         for s, a in zip(state, self.agents):
             ac = a.select_action(state, deterministic=deterministic)
             action.append(ac)
-        return action
+        return np.array(action).reshape(len(action), -1)
         
     def update(self, buffer):
         batch = buffer.sample()
-        for a in self.agents:
-            a.update(batch)
+        for i, a in enumerate(self.agents):
+            a.update(batch.get_task(i))
     
     def learn(self, 
         total_timesteps,
@@ -72,4 +73,13 @@ class SAC:
             
             self.buffer.add(state, action, reward, next_state, done, info)
             
-            self.logger.dict_record(report_train)
+            if step % train_freq == 0:
+                self.update(self.buffer)
+                
+            if step % eval_freq == 0:
+                self.logger.dict_record(report_train)
+                eval_results = evaluate_policy(self.eval_env, self, 
+                    num_eval_episodes=n_eval_episodes)
+                self.logger.dict_record(eval_results)
+                self.logger.dump()
+        self.logger.dump_file(self.log_path)
