@@ -105,6 +105,8 @@ class Critic(nn.Module):
         self._online_q = DoubleQNet(observation_space, action_space, num_layer, hidden_dim)
         self._target_q = DoubleQNet(observation_space, action_space, num_layer, hidden_dim)
         
+        for param in self._target_q.parameters():
+            param.requires_grad = False
         self._target_q.load_state_dict(self._online_q.state_dict())
         
     def target_q(self, x, a): return self._target_q(x, a)

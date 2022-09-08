@@ -100,4 +100,4 @@ class SAC:
                     num_eval_episodes=n_eval_episodes)
                 self.logger.dict_record(eval_report)
                 self.logger.dump()
-        self.logger.dump_file(self.log_path)
+        self.logger.dump_file()

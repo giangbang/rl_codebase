@@ -56,6 +56,7 @@ def evaluate_policy(env, agent, deterministic: bool=True,
 
         next_state, reward, done, info = env.step(action)
         
+        state = next_state
         total_return += reward * (num_episodes < num_eval_episodes)
         num_episodes += done
         
