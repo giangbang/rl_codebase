@@ -35,7 +35,7 @@ class SAC:
         self.eval_env = eval_env
         
         self.agents = [
-            ContinuousSAC(env, learning_rate, gamma, tau, num_layers, hidden_dim
+            ContinuousSAC(env, learning_rate, gamma, tau, num_layers, hidden_dim,
                 init_temperature)
             for _ in range(env.num_envs)
         ]
@@ -62,7 +62,7 @@ class SAC:
     
     def learn(self, 
         total_timesteps,
-        start_step: int = 1000
+        start_step: int = 1000,
         eval_freq: int = 10000,
         n_eval_episodes: int = 10,
         train_freq: int=1,
