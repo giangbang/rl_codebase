@@ -2,13 +2,15 @@ import gym
 from .utils import wrap_vec_env
 import sys
 import time
+import numpy as np
+from collections import deque
 
 
 def collect_transitions(env, agent, total_timesteps, start_step, eval_freq: int = 1000):
     """
     A simple function to let agent interact with environment.
     Can be helpful for many kind of RL algorithms.
-    This function only help interacting and collecting transition, 
+    This function only help to interact and collect transition,
     so the bulk of the code is outside this function.
     
     :param env: environment to interact with, should follow a 
@@ -29,6 +31,9 @@ def collect_transitions(env, agent, total_timesteps, start_step, eval_freq: int 
         env = wrap_vec_env(env)
 
     start_time = time.time_ns()
+    episode_rewards = np.zeros((env.num_envs,), dtype=float)
+    rewards_episode_buffer = [deque(maxlen=100) for _ in range(env.num_envs)]
+
     report = {}
 
     state = env.reset()
@@ -39,18 +44,25 @@ def collect_transitions(env, agent, total_timesteps, start_step, eval_freq: int 
             action = agent.select_action(state, deterministic=False)
 
         next_state, reward, done, info = env.step(action)
+        episode_rewards += reward
+
+        for i, d in enumerate(done):
+            if d:
+                rewards_episode_buffer[i].extend([episode_rewards[i]])
+                episode_rewards[i] = 0
 
         # report
         if step % eval_freq == 0:
             # We only update training report at every specific intervals
             # to optimize cpu time, 
             time_elapsed = max((time.time_ns() - start_time) / 1e9, sys.float_info.epsilon)
-            num_timestep = (step + 1) * env.num_envs
+            num_timestep = step * env.num_envs
             fps = int(num_timestep / time_elapsed)
 
             report['time.time_elapsed'] = time_elapsed
             report['time.total_timesteps'] = num_timestep
             report['time.fps'] = fps
+            report['train.rewards'] = np.mean([np.mean(ep_rw) for ep_rw in rewards_episode_buffer])
 
         yield (state, action, reward, next_state, done, info), report
         state = next_state

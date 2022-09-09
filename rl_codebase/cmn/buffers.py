@@ -7,6 +7,7 @@ from .utils import *
 Transition = namedtuple('Transition',
                         ('states', 'actions', 'rewards', 'next_states', 'dones'))
 
+
 class BufferTransition(Transition):
     def get_task(self, task: int):
         states = self.states[:, task]
@@ -16,26 +17,28 @@ class BufferTransition(Transition):
         dones = self.dones[:, task]
         return Transition(states, actions, rewards, next_states, dones)
 
+
 class ReplayBuffer(object):
     """Buffer to store environment transitions."""
-    def __init__(self, 
-            observation_space: gym.spaces, 
-            action_space: gym.spaces, 
-            capacity: int=1_000_000, 
-            batch_size: int=256, 
-            device: str='cpu',
-            num_envs: int=None,
-    ):
+
+    def __init__(self,
+                 observation_space: gym.spaces,
+                 action_space: gym.spaces,
+                 capacity: int = 1_000_000,
+                 batch_size: int = 256,
+                 device: str = 'cpu',
+                 num_envs: int = None,
+                 ):
         self.capacity = capacity
         self.batch_size = batch_size
         self.device = device
-        
+
         if num_envs is None:
             num_envs = 1
             self.is_multitask_buffer = False
-        else: 
+        else:
             self.is_multitask_buffer = True
-        
+
         self.num_envs = num_envs
         self.obs_shape = get_obs_shape(observation_space)
         self.action_dim = get_action_dim(action_space)
@@ -56,7 +59,7 @@ class ReplayBuffer(object):
         self.full = False
 
     def add(self, obs, action, reward, next_obs, done, info=None):
-        '''Add a new transition to replay buffer'''
+        """Add a new transition to replay buffer"""
         obs = np.array(obs).reshape(self.obses.shape[1:])
         action = np.array(action).reshape(self.actions.shape[1:])
         reward = np.array(reward).reshape(self.rewards.shape[1:])
@@ -72,19 +75,19 @@ class ReplayBuffer(object):
         if info is not None:
             timeout_shape = self.dones.shape[1:]
             # [Important] Handle timeout separately for infinite horizon
-            timeout = info.get("TimeLimit.truncated", np.zeros(timeout_shape,dtype=bool))
-            self.dones[self.idx] *= (1-timeout).reshape(*timeout_shape)
+            timeout = info.get("TimeLimit.truncated", np.zeros(timeout_shape, dtype=bool))
+            self.dones[self.idx] *= (1 - timeout).reshape(*timeout_shape)
 
         self.idx = (self.idx + 1) % self.capacity
         self.full = self.full or self.idx == 0
 
     def sample(self, callback_on_states=None):
-        '''
+        """
         Sample batch of Transitions with batch_size elements.
-        Return a named tuple with 'states', 'actions', 'rewards', 'next_states' and 'dones'. 
+        Return a named tuple with 'states', 'actions', 'rewards', 'next_states' and 'dones'.
         `callback_on_state` is helpful when you want to preprocess the states before feeding to neural nets
         for example, this can be a normalization step, or onehot encoding of tasks
-        '''
+        """
         idxs = np.random.randint(
             0, self.capacity if self.full else self.idx, size=self.batch_size
         )
@@ -96,16 +99,16 @@ class ReplayBuffer(object):
             self.next_obses[idxs], device=self.device
         ).float()
         dones = torch.as_tensor(self.dones[idxs], device=self.device)
-        
+
         if callback_on_states is not None:
             obses = callback_on_states(obses)
             next_obses = callback_on_states(next_obses)
 
         batch_return = BufferTransition(obses, actions, rewards, next_obses, dones)
-        
-        if not self.is_multitask_buffer: 
+
+        if not self.is_multitask_buffer:
             return self._discard_env_dimension(batch_return)
         return batch_return
-        
+
     def _discard_env_dimension(self, transitions: BufferTransition):
-        return Transition(*map(lambda x:x.squeeze(axis=1), transitions))
+        return Transition(*map(lambda x: x.squeeze(axis=1), transitions))

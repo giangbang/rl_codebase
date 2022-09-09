@@ -7,13 +7,13 @@ from rl_codebase.cmn import (
 from rl_codebase.cmn.utils import *
 from .sac_continuous import ContinuousSAC
 import gym
-
+import torch.nn as nn
 
 class SAC:
     def __init__(
             self,
             env,
-            eval_env,
+            eval_env=None,
             learning_rate: float = 3e-4,
             buffer_size: int = 1_000_000,  # 1e6
             batch_size: int = 256,
@@ -82,6 +82,7 @@ class SAC:
               n_eval_episodes: int = 10,
               train_freq: int = 1,
               ):
+        train_report = {}
         for step, (transition, time_report) in enumerate(collect_transitions(self.env,
                                                                              self, total_timesteps, start_step)):
             state, action, reward, next_state, done, info = transition
@@ -94,9 +95,11 @@ class SAC:
             if step % eval_freq == 0:
                 self.logger.dict_record(time_report)
                 self.logger.dict_record(train_report)
-                eval_report = evaluate_policy(self.eval_env, self,
-                                              num_eval_episodes=n_eval_episodes)
-                self.logger.dict_record(eval_report)
+
+                if self.eval_env:
+                    eval_report = evaluate_policy(self.eval_env, self,
+                                                  num_eval_episodes=n_eval_episodes)
+                    self.logger.dict_record(eval_report)
                 self.logger.dump()
         self.logger.dump_file()
 
