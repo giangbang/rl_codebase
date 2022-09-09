@@ -6,6 +6,7 @@ from rl_codebase.cmn import (
 )
 from rl_codebase.cmn.utils import *
 from .sac_continuous import ContinuousSAC
+from .sac_discrete import DiscreteSAC
 import gym
 import torch.nn as nn
 
@@ -33,14 +34,17 @@ class SAC:
 
         self.env = env
         self.eval_env = eval_env
-
-        self.agents = nn.ModuleList([
-            ContinuousSAC(env, learning_rate, gamma, tau, num_layers, hidden_dim,
-                          init_temperature, device)
-            for _ in range(env.num_envs)
-        ])
+        
         self.observation_space = get_observation_space(env)
         self.action_space = get_action_space(env)
+        
+        agent_cls = DiscreteSAC if isinstance(action_space, gym.spaces.Discrete) else ContinuousSAC
+        self.agents = nn.ModuleList([
+            agent_cls(env, learning_rate, gamma, tau, num_layers, hidden_dim,
+                      init_temperature, device)
+            for _ in range(env.num_envs)
+        ])
+        
         self.buffer = ReplayBuffer(self.observation_space, self.action_space, buffer_size,
                                    batch_size, device, env.num_envs)
 

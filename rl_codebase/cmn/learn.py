@@ -32,12 +32,12 @@ def collect_transitions(env, agent, total_timesteps, start_step, eval_freq: int 
 
     start_time = time.time_ns()
     episode_rewards = np.zeros((env.num_envs,), dtype=float)
-    rewards_episode_buffer = [deque(maxlen=100) for _ in range(env.num_envs)]
+    rewards_episode_buffer = [deque(maxlen=50) for _ in range(env.num_envs)]
 
     report = {}
 
     state = env.reset()
-    for step in range(total_timesteps):
+    for step in range(total_timesteps+1):
         if step < start_step:
             action = env.action_space.sample()
         else:

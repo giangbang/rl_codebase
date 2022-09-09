@@ -10,29 +10,33 @@ class Logger:
             import os
             self.file_dir = os.path.join(self.log_dir, file_name)
             os.makedirs(log_dir, exist_ok=True)
+            self.csv_file = open(self.file_dir, 'w', encoding='utf8')
+            self.csv_writer = None
         
     def record(self, key: str, val):
-        if key not in self.name_to_vals:
-            self.name_to_vals[key] = []
-        
-        self.name_to_vals[key].append(val)
+        self.name_to_vals[key] = val
         
     def dict_record(self, report: dict):
-        for key, val in report.items():
-            self.record(key, val)
+        self.name_to_vals.update(report)
             
     def __getitem__(self, key: str):
-        return self.name_to_vals.get(key, [])
-        
-    def to_df(self):
-        import pandas as pd
-        return pd.DataFrame(self.name_to_vals)
+        return self.name_to_vals.get(key, None)
     
     def dump(self):
         print('='*30)
         for key, val in self.name_to_vals.items():
-            print(f"{key:<20} : {val[-1]:.2f}")
+            if isinstance(val, float):
+                print(f"{key:<20} : {val:.2f}")
+            else:
+                print(f"{key:<20} : {val}")
+        
+        if self.log_to_file:
+            if not self.csv_writer:
+                self.csv_writer=csv.DictWriter(
+                        self.csv_file, fieldnames=self.name_to_vals.keys())
+                self.csv_writer.writeheader()
+            self.csv_writer.writerow(self.name_to_vals)
+            self.csv_file.flush()
             
     def dump_file(self):
-        df = self.to_df()
-        df.to_csv(self.file_dir, float_format='%.2f')
+        self.csv_file.flush()
