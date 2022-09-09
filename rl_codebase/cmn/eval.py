@@ -4,10 +4,11 @@ import numpy as np
 from typing import List
 from .utils import wrap_vec_env
 
-def evaluate_policy(env, agent, deterministic: bool=True, 
-    num_eval_episodes: int=10, save_video_to:str=None,
-    report_seperated_task: bool=False, task_names: List[str]=None
-):
+
+def evaluate_policy(env, agent, deterministic: bool = True,
+                    num_eval_episodes: int = 10, save_video_to: str = None,
+                    report_separated_task: bool = False, task_names: List[str] = None
+                    ):
     """
     Evaluate the `agent` on the given `env`.
 
@@ -23,7 +24,7 @@ def evaluate_policy(env, agent, deterministic: bool=True,
         in case the environment is multi-task, each task will be evaluated
         with `num_eval_episodes` episodes, making a total of 
         `num_eval_episodes * n_tasks` env episodes.
-    :param report_seperated_task: whether to report seperatedly on each task
+    :param report_separated_task: whether to report seperatedly on each task
         or not, ignore in single-task env.
     ;param task_names: List of the names of tasks, if None, each tasks is named from
         0 to `n_tasks`-1, only works when `report_seperated_task` is set to `True`
@@ -43,23 +44,23 @@ def evaluate_policy(env, agent, deterministic: bool=True,
     num_episodes = np.zeros((env.num_envs,), dtype=int)
     total_return = np.zeros((env.num_envs,), dtype=float)
     success_rate = np.zeros((env.num_envs,), dtype=float)
-    
-    has_success_metric = False # Some envs do not support success measure
+
+    has_success_metric = False  # Some envs do not support success measure
 
     state = env.reset()
     if save_vid:
         stop_record = np.zeros((env.num_envs,), dtype=bool)
-        frames = [ _get_frames_from_VecEnv(env, stop_record) ]
+        frames = [_get_frames_from_VecEnv(env, stop_record)]
 
     while (num_episodes < num_eval_episodes).any():
         action = agent.select_action(state, deterministic=deterministic)
 
         next_state, reward, done, info = env.step(action)
-        
+
         state = next_state
         total_return += reward * (num_episodes < num_eval_episodes)
         num_episodes += done
-        
+
         if 'success' in info or 'is_success' in info:
             success = info.get('success', info.get('is_success'))
             success = np.array(success, dtype=float)
@@ -69,15 +70,15 @@ def evaluate_policy(env, agent, deterministic: bool=True,
 
         if save_vid:
             stop_record = np.bitwise_or(done, stop_record)
-            frames.append( _get_frames_from_VecEnv(env, stop_record) )
+            frames.append(_get_frames_from_VecEnv(env, stop_record))
 
     total_return /= num_eval_episodes
     success_rate /= num_eval_episodes
 
     if task_names is None:
-        task_names = [f'task_{i}' for i in range(env.num_envs)] 
+        task_names = [f'task_{i}' for i in range(env.num_envs)]
 
-    if report_seperated_task:
+    if report_separated_task:
         for task_name, reward in zip(task_names, total_return):
             report[f'eval.{task_name}.rewards'] = reward
         if has_success_metric:
@@ -96,6 +97,7 @@ def evaluate_policy(env, agent, deterministic: bool=True,
 
     return report
 
+
 def _get_frames_from_VecEnv(env, stop_record):
     frames = []
     for e, s in zip(env.envs, stop_record):
@@ -103,17 +105,19 @@ def _get_frames_from_VecEnv(env, stop_record):
             frame = e.render()
             frame = np.array(frame)
             if len(frame.shape) > 3: frame = np.squeeze(frame)
-        else: frame = None
+        else:
+            frame = None
         frames.append(frame)
     return frames
 
-def write_video_from_ndarray(frames: List[np.ndarray], filename:str):
+
+def write_video_from_ndarray(frames: List[np.ndarray], filename: str):
     import cv2
     assert filename.endswith('.mp4')
     h, w = frames[0].shape[:2]
     fps = 50
 
-    fourcc = cv2.VideoWriter_fourcc(*'MP4V') 
+    fourcc = cv2.VideoWriter_fourcc(*'MP4V')
     video = cv2.VideoWriter(filename, fourcc, float(fps), (w, h))
 
     for frame in frames:
