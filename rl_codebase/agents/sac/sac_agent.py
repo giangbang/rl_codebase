@@ -38,7 +38,7 @@ class SAC:
         self.observation_space = get_observation_space(env)
         self.action_space = get_action_space(env)
         
-        agent_cls = DiscreteSAC if isinstance(action_space, gym.spaces.Discrete) else ContinuousSAC
+        agent_cls = DiscreteSAC if isinstance(self.action_space, gym.spaces.Discrete) else ContinuousSAC
         self.agents = nn.ModuleList([
             agent_cls(env, learning_rate, gamma, tau, num_layers, hidden_dim,
                       init_temperature, device)

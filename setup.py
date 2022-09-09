@@ -7,6 +7,7 @@ setup(
     python_requires=">=3.7",
     author="giangbang",
     author_email="banggiangle2015@gmail.com",
+    url="https://github.com/giangbang/rl_codebase",
     install_requires=[
         "torch",
         "torchvision",
