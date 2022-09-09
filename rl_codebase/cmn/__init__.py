@@ -5,4 +5,4 @@ from .loggers import Logger
 from .create_nets import create_net
 from .utils import *
 from .networks import MLP, CNN
-from .vec_env import VecEnv
+from .vec_env import VecEnv, wrap_vec_env

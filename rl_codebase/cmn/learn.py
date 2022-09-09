@@ -1,5 +1,5 @@
 import gym
-from .utils import wrap_vec_env
+from .vec_env import wrap_vec_env
 import sys
 import time
 import numpy as np

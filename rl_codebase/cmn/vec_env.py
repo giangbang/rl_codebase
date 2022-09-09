@@ -1,3 +1,4 @@
+import gym
 from gym.vector import SyncVectorEnv
 from .utils import get_obs_shape, get_action_dim
 
@@ -30,3 +31,11 @@ class VecEnv(SyncVectorEnv):
                 )
 
         return True
+
+def wrap_vec_env(env):
+    if isinstance(env, gym.vector.VectorEnv):
+        return env
+    if not isinstance(env, list):
+        env = [env]
+    env_fns = list(map( lambda e : lambda: e, env ))
+    return VecEnv(env_fns)

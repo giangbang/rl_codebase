@@ -1,3 +1,5 @@
+import csv
+
 
 class Logger:
     def __init__(self, log_dir=None, file_name='progress.csv'):

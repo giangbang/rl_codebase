@@ -2,7 +2,7 @@ import os
 import gym
 import numpy as np
 from typing import List
-from .utils import wrap_vec_env
+from .vec_env import wrap_vec_env
 
 
 def evaluate_policy(env, agent, deterministic: bool = True,

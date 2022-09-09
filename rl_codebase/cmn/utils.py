@@ -3,7 +3,6 @@ from typing import Dict, Tuple, Union, List
 from gym import spaces
 import gym
 import numpy as np
-from .vec_env import VecEnv
 
 def get_obs_shape(
     observation_space: spaces.Space,
@@ -75,11 +74,3 @@ def get_action_space(env: gym.Env):
     if isinstance(env, gym.vector.VectorEnv):
         return env.single_action_space
     return env.action_space
-
-def wrap_vec_env(env: List[gym.Env]):
-    if isinstance(env, gym.vector.VectorEnv):
-        return env
-    if not isinstance(env, list):
-        env = [env]
-    env_fns = list(map( lambda e : lambda: e, env ))
-    return VecEnv(env_fns)

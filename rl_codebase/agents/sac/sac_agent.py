@@ -55,7 +55,7 @@ class SAC:
     def select_action(self, state, deterministic: bool = False):
         action = []
         for s, a in zip(state, self.agents):
-            ac = a.select_action(state, deterministic=deterministic)
+            ac = a.select_action(s, deterministic=deterministic)
             action.append(ac)
         return np.array(action).reshape(len(action), -1)
 
