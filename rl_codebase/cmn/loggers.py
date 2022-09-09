@@ -25,18 +25,23 @@ class Logger:
     def dump(self):
         print('='*30)
         for key, val in self.name_to_vals.items():
-            if isinstance(val, float):
-                print(f"{key:<20} : {val:.2f}")
-            else:
-                print(f"{key:<20} : {val}")
+            print(f"{key:<20} : {_maybe_float_roundoff(val)}")
         
         if self.log_to_file:
             if not self.csv_writer:
                 self.csv_writer=csv.DictWriter(
                         self.csv_file, fieldnames=self.name_to_vals.keys())
                 self.csv_writer.writeheader()
-            self.csv_writer.writerow(self.name_to_vals)
+            self.csv_writer.writerow(
+                dict(map( lambda it: (it[0], _maybe_float_roundoff(it[1])),
+                        self.name_to_vals.items() ))
+            )
             self.csv_file.flush()
             
     def dump_file(self):
         self.csv_file.flush()
+        
+def _maybe_float_roundoff(n):
+    if isinstance(n, float):
+        return f'{n:.2f}'
+    return n
