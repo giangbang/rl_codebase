@@ -11,6 +11,7 @@ from .sac_discrete import DiscreteSAC
 import gym
 import torch.nn as nn
 
+
 class SAC:
     def __init__(
             self,
@@ -35,17 +36,24 @@ class SAC:
 
         self.env = env
         self.eval_env = eval_env
-        
+
         self.observation_space = get_observation_space(env)
         self.action_space = get_action_space(env)
-        
+
         agent_cls = DiscreteSAC if isinstance(self.action_space, gym.spaces.Discrete) else ContinuousSAC
         self.agents = nn.ModuleList([
-            agent_cls(env, learning_rate, gamma, tau, num_layers, hidden_dim,
-                      init_temperature, device)
+            agent_cls(observation_space=self.observation_space,
+                      action_space=self.action_space,
+                      learning_rate=learning_rate,
+                      gamma=gamma,
+                      tau=tau,
+                      num_layers=num_layers,
+                      hidden_dim=hidden_dim,
+                      init_temperature=init_temperature,
+                      device=device)
             for _ in range(env.num_envs)
         ])
-        
+
         self.buffer = ReplayBuffer(self.observation_space, self.action_space, buffer_size,
                                    batch_size, device, env.num_envs)
 
@@ -122,4 +130,3 @@ class SAC:
         self.agents.load_state_dict(
             torch.load('%s/SACAgent_%s.pt' % (model_dir, step))
         )
-

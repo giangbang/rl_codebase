@@ -17,6 +17,10 @@ class BufferTransition(Transition):
         dones = self.dones[:, task]
         return Transition(states, actions, rewards, next_states, dones)
 
+    @property
+    def num_tasks(self):
+        return self.states.shape[1]
+
 
 class ReplayBuffer(object):
     """Buffer to store environment transitions."""

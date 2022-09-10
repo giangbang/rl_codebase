@@ -3,6 +3,7 @@ from rl_codebase.cmn import (
     get_action_space
 )
 import torch
+import gym
 import torch.nn as nn
 import torch.nn.functional as F
 from .models import *
@@ -11,7 +12,8 @@ from .models import *
 class ContinuousSAC(nn.Module):
     def __init__(
             self,
-            env,
+            observation_space: gym.spaces,
+            action_space: gym.spaces,
             learning_rate: float = 3e-4,
             gamma: float = 0.99,
             tau: float = 0.005,
@@ -24,9 +26,6 @@ class ContinuousSAC(nn.Module):
         self.gamma = gamma
         self.tau = tau
         self.device = device
-
-        observation_space = get_observation_space(env)
-        action_space = get_action_space(env)
 
         action_dim = get_action_dim(action_space)
 
@@ -52,14 +51,14 @@ class ContinuousSAC(nn.Module):
             [self.log_ent_coef], lr=learning_rate
         )
 
-    def _critic_loss(self, batch):
+    def critic_loss(self, batch, log_ent_coef):
         # Compute target Q 
         with torch.no_grad():
             next_pi, next_log_pi = self.actor.sample(batch.next_states, compute_log_pi=True)
             next_q_vals = self.critic.target_q(batch.next_states, next_pi)
             next_q_val = torch.minimum(*next_q_vals)
 
-            ent_coef = torch.exp(self.log_ent_coef)
+            ent_coef = torch.exp(log_ent_coef)
             next_q_val = next_q_val - ent_coef * next_log_pi
 
             target_q_val = batch.rewards + (1 - batch.dones) * self.gamma * next_q_val
@@ -69,29 +68,29 @@ class ContinuousSAC(nn.Module):
 
         return critic_loss
 
-    def _actor_loss(self, batch):
+    def actor_loss(self, batch, log_ent_coef):
         pi, log_pi = self.actor.sample(batch.states, compute_log_pi=True)
 
         q_vals = self.critic.online_q(batch.states, pi)
         q_val = torch.minimum(*q_vals)
 
         with torch.no_grad():
-            ent_coef = torch.exp(self.log_ent_coef)
+            ent_coef = torch.exp(log_ent_coef)
 
         actor_loss = (ent_coef * log_pi - q_val).mean()
 
         return actor_loss
 
-    def _alpha_loss(self, batch):
+    def alpha_loss(self, batch, log_ent_coef):
         with torch.no_grad():
             pi, log_pi = self.actor.sample(batch.states, compute_log_pi=True)
-        alpha_loss = -(self.log_ent_coef * (log_pi + self.target_entropy).detach()).mean()
+        alpha_loss = -(log_ent_coef * (log_pi + self.target_entropy).detach()).mean()
 
         return alpha_loss
 
     def update(self, batch):
         # Update critic
-        critic_loss = self._critic_loss(batch)
+        critic_loss = self.critic_loss(batch, self.log_ent_coef)
 
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
@@ -100,14 +99,14 @@ class ContinuousSAC(nn.Module):
         self.critic.polyak_update(self.tau)
 
         # Update actor
-        actor_loss = self._actor_loss(batch)
+        actor_loss = self.actor_loss(batch, self.log_ent_coef)
 
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
         self.actor_optimizer.step()
 
         # Update alpha
-        alpha_loss = self._alpha_loss(batch)
+        alpha_loss = self.alpha_loss(batch, self.log_ent_coef)
 
         self.ent_coef_optimizer.zero_grad()
         alpha_loss.backward()

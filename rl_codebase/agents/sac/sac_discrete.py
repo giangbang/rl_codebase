@@ -1,8 +1,5 @@
-from rl_codebase.cmn import (
-    get_observation_space,
-    get_action_space
-)
 import torch
+import gym
 import torch.nn as nn
 import torch.nn.functional as F
 from .models import *
@@ -11,7 +8,8 @@ from .models import *
 class DiscreteSAC(nn.Module):
     def __init__(
             self,
-            env,
+            observation_space: gym.spaces,
+            action_space: gym.spaces,
             learning_rate: float = 3e-4,
             gamma: float = 0.99,
             tau: float = 0.005,
@@ -25,9 +23,6 @@ class DiscreteSAC(nn.Module):
         self.gamma = gamma
         self.tau = tau
         self.device = device
-
-        observation_space = get_observation_space(env)
-        action_space = get_action_space(env)
 
         action_dim = get_action_dim(action_space)
 
@@ -53,7 +48,7 @@ class DiscreteSAC(nn.Module):
             [self.log_ent_coef], lr=learning_rate
         )
 
-    def _critic_loss(self, batch):
+    def critic_loss(self, batch, log_ent_coef):
         # Compute target Q 
         with torch.no_grad():
             next_pi, next_entropy = self.actor.sample(batch.next_states, compute_log_pi=True)
@@ -65,7 +60,7 @@ class DiscreteSAC(nn.Module):
                 dim=1, keepdims=True
             )
 
-            ent_coef = torch.exp(self.log_ent_coef)
+            ent_coef = torch.exp(log_ent_coef)
             next_q_val = next_q_val + ent_coef * next_entropy.reshape(-1, 1)
 
             target_q_val = batch.rewards + (1 - batch.dones) * self.gamma * next_q_val
@@ -79,7 +74,7 @@ class DiscreteSAC(nn.Module):
 
         return critic_loss
 
-    def _actor_loss(self, batch):
+    def actor_loss(self, batch, log_ent_coef):
         pi, ent = self.actor.sample(batch.states, compute_log_pi=True)
 
         with torch.no_grad():
@@ -87,7 +82,7 @@ class DiscreteSAC(nn.Module):
             q_val = torch.minimum(*q_vals)
 
         with torch.no_grad():
-            ent_coef = torch.exp(self.log_ent_coef)
+            ent_coef = torch.exp(log_ent_coef)
 
         actor_loss = (pi * q_val).sum(
             dim=1, keepdims=True
@@ -96,18 +91,18 @@ class DiscreteSAC(nn.Module):
 
         return actor_loss
 
-    def _alpha_loss(self, batch):
+    def alpha_loss(self, batch, log_ent_coef):
         with torch.no_grad():
             pi, entropy = self.actor.sample(batch.states, compute_log_pi=True)
         alpha_loss = -(
-                self.log_ent_coef * (-entropy + self.target_entropy).detach()
+                log_ent_coef * (-entropy + self.target_entropy).detach()
         ).mean()
 
         return alpha_loss
 
     def update(self, batch):
         # Update critic
-        critic_loss = self._critic_loss(batch)
+        critic_loss = self.critic_loss(batch, self.log_ent_coef)
 
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
@@ -116,14 +111,14 @@ class DiscreteSAC(nn.Module):
         self.critic.polyak_update(self.tau)
 
         # Update actor
-        actor_loss = self._actor_loss(batch)
+        actor_loss = self.actor_loss(batch, self.log_ent_coef)
 
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
         self.actor_optimizer.step()
 
         # Update alpha
-        alpha_loss = self._alpha_loss(batch)
+        alpha_loss = self.alpha_loss(batch, self.log_ent_coef)
 
         self.ent_coef_optimizer.zero_grad()
         alpha_loss.backward()
