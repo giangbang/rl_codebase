@@ -3,6 +3,7 @@ import gym
 import numpy as np
 from typing import List
 from .vec_env import wrap_vec_env
+from .utils import get_time_now_as_str
 
 
 def evaluate_policy(env, agent, deterministic: bool = True,
@@ -58,7 +59,8 @@ def evaluate_policy(env, agent, deterministic: bool = True,
         next_state, reward, done, info = env.step(action)
 
         state = next_state
-        total_return += reward * (num_episodes < num_eval_episodes)
+        remaining_tasks = num_episodes < num_eval_episodes
+        total_return += reward * remaining_tasks
         num_episodes += done
 
         if 'success' in info or 'is_success' in info:
@@ -66,7 +68,7 @@ def evaluate_policy(env, agent, deterministic: bool = True,
             success = np.array(success, dtype=float)
             has_success_metric = True
             assert success.shape == success_rate.shape
-            success_rate += success
+            success_rate += success * remaining_tasks
 
         if save_vid:
             stop_record = np.bitwise_or(done, stop_record)
@@ -92,10 +94,16 @@ def evaluate_policy(env, agent, deterministic: bool = True,
             report['eval.success'] = np.mean(success_rate)
 
     if save_vid:
-        frames = list(zip(*frames))
-        for task_name, fr in zip(task_names, frames):
-            vid_path = os.path.join(save_video_to, f'{task_name}.mp4')
-            write_video_from_ndarray(fr, vid_path)
+        tiled_frames = []
+        for time_step, frame in enumerate(frames):
+            for task, fr in enumerate(frame):
+                if fr is None: # End of episode, while other tasks are still running
+                    # Patch the missing frames with the last frame of that task
+                    frame[task] = frames[time_step-1][task]
+            tiled_frames.append(tile_images(frame))
+
+        vid_path = os.path.join(save_video_to, f'{get_time_now_as_str()}.mp4')
+        write_video_from_ndarray(tiled_frames, vid_path)
 
     return report
 
@@ -128,3 +136,28 @@ def write_video_from_ndarray(frames: List[np.ndarray], filename: str):
             video.write(frame)
 
     video.release()
+
+def tile_images(img_nhwc: List[np.ndarray]) -> np.ndarray:  # pragma: no cover
+    """
+    This function is borrowed from Stable-baselines3
+    Tile N images into one big PxQ image
+    (P,Q) are chosen to be as close as possible, and if N
+    is square, then P=Q.
+    :param img_nhwc: list or array of images, ndim=4 once turned into array. img nhwc
+        n = batch index, h = height, w = width, c = channel
+    :return: img_HWc, ndim=3
+    """
+    img_nhwc = np.asarray(img_nhwc)
+    n_images, height, width, n_channels = img_nhwc.shape
+    # new_height was named H before
+    new_height = int(np.ceil(np.sqrt(n_images)))
+    # new_width was named W before
+    new_width = int(np.ceil(float(n_images) / new_height))
+    img_nhwc = np.array(list(img_nhwc) + [img_nhwc[0] * 0 for _ in range(n_images, new_height * new_width)])
+    # img_HWhwc
+    out_image = img_nhwc.reshape((new_height, new_width, height, width, n_channels))
+    # img_HhWwc
+    out_image = out_image.transpose(0, 2, 1, 3, 4)
+    # img_Hh_Ww_c
+    out_image = out_image.reshape((new_height * height, new_width * width, n_channels))
+    return out_image

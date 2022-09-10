@@ -1,6 +1,7 @@
 # these functions in this file are borrowed from stable-baselines3
 from typing import Dict, Tuple, Union, List
 from gym import spaces
+from datetime import datetime
 import gym
 import numpy as np
 
@@ -74,3 +75,6 @@ def get_action_space(env: gym.Env):
     if isinstance(env, gym.vector.VectorEnv):
         return env.single_action_space
     return env.action_space
+
+def get_time_now_as_str():
+    return datetime.now().strftime('%Y-%m-%d_%H%M%S')
