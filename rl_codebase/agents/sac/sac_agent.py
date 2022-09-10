@@ -2,7 +2,8 @@ from rl_codebase.cmn import (
     ReplayBuffer,
     evaluate_policy,
     collect_transitions,
-    Logger
+    Logger,
+    wrap_vec_env
 )
 from rl_codebase.cmn.utils import *
 from .sac_continuous import ContinuousSAC
