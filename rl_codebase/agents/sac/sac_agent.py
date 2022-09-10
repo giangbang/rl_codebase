@@ -60,17 +60,18 @@ class SAC:
             action.append(ac)
         return np.array(action).reshape(len(action), -1)
 
-    def update(self, buffer):
+    def update(self, buffer, gradient_steps: int = 1):
         critic_losses, actor_losses, alpha_losses = [], [], []
         alpha = []
         batch = buffer.sample()
         for i, a in enumerate(self.agents):
-            critic_loss, actor_loss, alpha_loss = a.update(batch.get_task(i))
+            for _ in range(gradient_steps):
+                critic_loss, actor_loss, alpha_loss = a.update(batch.get_task(i))
 
-            critic_losses.append(critic_loss)
-            actor_losses.append(actor_loss)
-            alpha_losses.append(alpha_loss)
-            alpha.append(a.log_ent_coef.exp().detach().item())
+                critic_losses.append(critic_loss)
+                actor_losses.append(actor_loss)
+                alpha_losses.append(alpha_loss)
+                alpha.append(a.log_ent_coef.exp().detach().cpu().item())
 
         report = {
             'train.critic_loss': np.mean(critic_losses),
@@ -81,11 +82,12 @@ class SAC:
         return report
 
     def learn(self,
-              total_timesteps,
+              total_timesteps: int,
               start_step: int = 1000,
               eval_freq: int = 10000,
               n_eval_episodes: int = 10,
               train_freq: int = 1,
+              gradient_steps: int = 1,
               ):
         train_report = {}
         for step, (transition, time_report) in enumerate(collect_transitions(self.env,
@@ -95,7 +97,7 @@ class SAC:
             self.buffer.add(state, action, reward, next_state, done, info)
 
             if step % train_freq == 0:
-                train_report = self.update(self.buffer)
+                train_report = self.update(self.buffer, gradient_steps)
 
             if step % eval_freq == 0:
                 self.logger.dict_record(time_report)

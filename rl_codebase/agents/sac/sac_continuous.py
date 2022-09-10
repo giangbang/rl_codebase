@@ -1,6 +1,4 @@
 from rl_codebase.cmn import (
-    get_action_dim,
-    get_obs_shape,
     get_observation_space,
     get_action_space
 )
@@ -54,7 +52,7 @@ class ContinuousSAC(nn.Module):
             [self.log_ent_coef], lr=learning_rate
         )
 
-    def _update_critic(self, batch):
+    def _critic_loss(self, batch):
         # Compute target Q 
         with torch.no_grad():
             next_pi, next_log_pi = self.actor.sample(batch.next_states, compute_log_pi=True)
@@ -69,15 +67,9 @@ class ContinuousSAC(nn.Module):
         current_q_vals = self.critic.online_q(batch.states, batch.actions)
         critic_loss = .5 * sum(F.mse_loss(current_q, target_q_val) for current_q in current_q_vals)
 
-        self.critic_optimizer.zero_grad()
-        critic_loss.backward()
-        self.critic_optimizer.step()
+        return critic_loss
 
-        self.critic.polyak_update(self.tau)
-
-        return critic_loss.item()
-
-    def _update_actor(self, batch):
+    def _actor_loss(self, batch):
         pi, log_pi = self.actor.sample(batch.states, compute_log_pi=True)
 
         q_vals = self.critic.online_q(batch.states, pi)
@@ -88,29 +80,40 @@ class ContinuousSAC(nn.Module):
 
         actor_loss = (ent_coef * log_pi - q_val).mean()
 
+        return actor_loss
+
+    def _alpha_loss(self, batch):
+        with torch.no_grad():
+            pi, log_pi = self.actor.sample(batch.states, compute_log_pi=True)
+        alpha_loss = -(self.log_ent_coef * (log_pi + self.target_entropy).detach()).mean()
+
+        return alpha_loss
+
+    def update(self, batch):
+        # Update critic
+        critic_loss = self._critic_loss(batch)
+
+        self.critic_optimizer.zero_grad()
+        critic_loss.backward()
+        self.critic_optimizer.step()
+
+        self.critic.polyak_update(self.tau)
+
+        # Update actor
+        actor_loss = self._actor_loss(batch)
+
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
         self.actor_optimizer.step()
 
-        return actor_loss.item()
-
-    def _update_alpha(self, batch):
-        with torch.no_grad():
-            pi, log_pi = self.actor.sample(batch.states, compute_log_pi=True)
-        alpha_loss = -(self.log_ent_coef * (log_pi + self.target_entropy).detach()).mean()
+        # Update alpha
+        alpha_loss = self._alpha_loss(batch)
 
         self.ent_coef_optimizer.zero_grad()
         alpha_loss.backward()
         self.ent_coef_optimizer.step()
 
-        return alpha_loss.item()
-
-    def update(self, batch):
-        critic_loss = self._update_critic(batch)
-        actor_loss = self._update_actor(batch)
-        alpha_loss = self._update_alpha(batch)
-
-        return critic_loss, actor_loss, alpha_loss
+        return critic_loss.item(), actor_loss.item(), alpha_loss.item()
 
     def select_action(self, state, deterministic=True):
         with torch.no_grad():
