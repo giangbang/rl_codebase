@@ -55,6 +55,7 @@ def collect_transitions(env, agent, total_timesteps, start_step, eval_freq: int 
         # As the VectorEnv resets automatically, `next_state` is already the
         # first observation of the next episode
         if 'final_observation' in info:
+            next_state_to_return = next_state.copy()
             final_obs_indx = info['_final_observation']
             final_obs = np.array(list(info['final_observation'][final_obs_indx]), dtype=state.dtype)
             np.copyto(next_state_to_return[final_obs_indx], final_obs)
