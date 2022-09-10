@@ -77,6 +77,8 @@ def evaluate_policy(env, agent, deterministic: bool = True,
 
     if task_names is None:
         task_names = [f'task_{i}' for i in range(env.num_envs)]
+    if not isinstance(task_names, list):
+        task_names = [task_names]
 
     if report_separated_task:
         for task_name, reward in zip(task_names, total_return):
