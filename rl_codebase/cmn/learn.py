@@ -45,11 +45,18 @@ def collect_transitions(env, agent, total_timesteps, start_step, eval_freq: int 
 
         next_state, reward, done, info = env.step(action)
         episode_rewards += reward
+        next_state_to_return = next_state
 
         for i, d in enumerate(done):
             if d:
                 rewards_episode_buffer[i].extend([episode_rewards[i]])
                 episode_rewards[i] = 0
+                
+        # As the VectorEnv resets automatically, `next_state` is already the
+        # first observation of the next episode
+        if 'final_observation' is in info:
+            final_obs_indx = info['_final_observation']
+            next_state_to_return[final_obs_indx] = info['final_observation'][final_obs_indx]
 
         # report
         if step % eval_freq == 0:
@@ -64,7 +71,7 @@ def collect_transitions(env, agent, total_timesteps, start_step, eval_freq: int 
             report['time.fps'] = fps
             report['train.rewards'] = np.mean([np.mean(ep_rw) for ep_rw in rewards_episode_buffer])
 
-        yield (state, action, reward, next_state, done, info), report
+        yield (state, action, reward, next_state_to_return, done, info), report
         state = next_state
 
     env.close()
