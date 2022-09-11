@@ -59,7 +59,7 @@ def collect_transitions(env, agent, total_timesteps, start_step, eval_freq: int 
             next_state_to_return = copy.deepcopy(next_state)
             final_obs_indx = info['_final_observation']
             final_obs = np.array(list(info['final_observation'][final_obs_indx]), dtype=state.dtype)
-            np.copyto(next_state_to_return[final_obs_indx], final_obs)
+            next_state_to_return[final_obs_indx] = final_obs
 
         # report
         if step % eval_freq == 0:
