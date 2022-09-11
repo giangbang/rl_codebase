@@ -24,14 +24,12 @@ class DiscreteSAC(nn.Module):
         self.tau = tau
         self.device = device
 
-        action_dim = get_action_dim(action_space)
-
         self.actor = DiscreteSACActor(observation_space, action_space, num_layers,
                                       hidden_dim).to(device)
 
         self.critic = Critic(observation_space, action_space, num_layers, hidden_dim).to(device)
 
-        self.target_entropy = np.log(action_dim) * target_entropy_ratio
+        self.target_entropy = np.log(action_space.n) * target_entropy_ratio
 
         self.actor_optimizer = torch.optim.Adam(
             self.actor.parameters(), lr=learning_rate,
