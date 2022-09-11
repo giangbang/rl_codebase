@@ -142,10 +142,10 @@ class Critic(nn.Module):
             param.requires_grad = False
         self._target_q.load_state_dict(self._online_q.state_dict())
 
-    def target_q(self, x, a):
+    def target_q(self, x, a=None):
         return self._target_q(x, a)
 
-    def online_q(self, x, a):
+    def online_q(self, x, a=None):
         return self._online_q(x, a)
 
     def polyak_update(self, tau):
