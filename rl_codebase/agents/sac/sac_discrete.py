@@ -51,7 +51,7 @@ class DiscreteSAC(nn.Module):
     def critic_loss(self, batch, log_ent_coef):
         # Compute target Q 
         with torch.no_grad():
-            next_pi, next_entropy = self.actor.sample(batch.next_states, compute_log_pi=True)
+            next_pi, next_entropy = self.actor.probs(batch.next_states, compute_log_pi=True)
 
             next_q_vals = self.critic.target_q(batch.next_states)
             next_q_val = torch.minimum(*next_q_vals)
@@ -75,7 +75,7 @@ class DiscreteSAC(nn.Module):
         return critic_loss
 
     def actor_loss(self, batch, log_ent_coef):
-        pi, ent = self.actor.sample(batch.states, compute_log_pi=True)
+        pi, ent = self.actor.probs(batch.states, compute_log_pi=True)
 
         with torch.no_grad():
             q_vals = self.critic.online_q(batch.states)
@@ -93,7 +93,7 @@ class DiscreteSAC(nn.Module):
 
     def alpha_loss(self, batch, log_ent_coef):
         with torch.no_grad():
-            pi, entropy = self.actor.sample(batch.states, compute_log_pi=True)
+            pi, entropy = self.actor.probs(batch.states, compute_log_pi=True)
         alpha_loss = -(
                 log_ent_coef * (-entropy + self.target_entropy).detach()
         ).mean()

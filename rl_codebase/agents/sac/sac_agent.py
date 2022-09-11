@@ -66,15 +66,16 @@ class SAC:
         for s, a in zip(state, self.agents):
             ac = a.select_action(s, deterministic=deterministic)
             action.append(ac)
-        return np.array(action).reshape(len(action), -1)
+        return np.array(action).reshape(self.env.action_space.shape)
 
     def update(self, buffer, gradient_steps: int = 1):
         critic_losses, actor_losses, alpha_losses = [], [], []
         alpha = []
         batch = buffer.sample()
         for i, a in enumerate(self.agents):
+            task_batch = batch.get_task(i)
             for _ in range(gradient_steps):
-                critic_loss, actor_loss, alpha_loss = a.update(batch.get_task(i))
+                critic_loss, actor_loss, alpha_loss = a.update(task_batch)
 
                 critic_losses.append(critic_loss)
                 actor_losses.append(actor_loss)
@@ -97,6 +98,7 @@ class SAC:
               train_freq: int = 1,
               gradient_steps: int = 1,
               ):
+        self.set_training_mode(True)
         train_report = {}
         for step, (transition, time_report) in enumerate(collect_transitions(self.env,
                                                                              self, total_timesteps, start_step)):
@@ -112,8 +114,10 @@ class SAC:
                 self.logger.dict_record(train_report)
 
                 if self.eval_env:
+                    self.set_training_mode(False)
                     eval_report = evaluate_policy(self.eval_env, self,
                                                   num_eval_episodes=n_eval_episodes)
+                    self.set_training_mode(True)
                     self.logger.dict_record(eval_report)
                 self.logger.dump()
         self.logger.dump_file()
@@ -130,3 +134,6 @@ class SAC:
         self.agents.load_state_dict(
             torch.load('%s/SACAgent_%s.pt' % (model_dir, step))
         )
+
+    def set_training_mode(self, mode: bool) -> None:
+        self.agents.train(mode)

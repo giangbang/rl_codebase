@@ -27,14 +27,13 @@ class ContinuousSAC(nn.Module):
         self.tau = tau
         self.device = device
 
-        action_dim = get_action_dim(action_space)
-
         self.actor = ContinuousSACActor(observation_space, action_space, num_layers,
                                         hidden_dim).to(device)
 
         self.critic = Critic(observation_space, action_space, num_layers, hidden_dim).to(device)
 
-        self.target_entropy = -np.prod(action_dim)
+        # Target entropy from the paper
+        self.target_entropy = -np.prod(action_space.shape)
 
         self.actor_optimizer = torch.optim.Adam(
             self.actor.parameters(), lr=learning_rate,

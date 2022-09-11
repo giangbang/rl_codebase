@@ -20,12 +20,19 @@ class DiscreteSACActor(nn.Module):
             hidden_dim=256,
     ):
         super().__init__()
-        self.action_dim = get_action_dim(action_space)
-        self.actor = create_net(observation_space, self.action_dim,
+        assert isinstance(action_space, gym.spaces.Discrete)
+        action_dim = action_space.n
+        self.actor = create_net(observation_space, action_dim,
                                 num_layer, hidden_dim)
 
     def forward(self, x):
         return self.actor(x)
+        
+    def probs(self, x, compute_log_pi=False):
+        logits = self.forward(x)
+        distribution = torch.distributions.Categorical(logits=logits)
+        if not compute_log_pi: return distribution.probs, None
+        return distribution.probs, distribution.entropy()
 
     def sample(self, x, compute_log_pi=False, deterministic: bool = False):
         logits = self.forward(x)
@@ -111,8 +118,10 @@ class DoubleQNet(nn.Module):
         action_dim = get_action_dim(action_space)
 
         self.is_discrete_action = isinstance(action_space, gym.spaces.Discrete)
+        # If the action space is continuous, action are concatenated with state in Q function
         inputs_dim = state_dim + action_dim * (1 - self.is_discrete_action)
-        output_dim = 1 if not self.is_discrete_action else action_dim
+        # If the action space is discrete, output all the action Q values of a state
+        output_dim = 1 if not self.is_discrete_action else action_space.n
 
         self.q1 = MLP(inputs_dim, output_dim, num_layer, hidden_dim)
         self.q2 = MLP(inputs_dim, output_dim, num_layer, hidden_dim)
