@@ -10,6 +10,7 @@ from .sac_continuous import ContinuousSAC
 from .sac_discrete import DiscreteSAC
 import gym
 import torch.nn as nn
+import torch
 
 
 class SAC:
@@ -121,6 +122,7 @@ class SAC:
                     self.logger.dict_record(eval_report)
                 self.logger.dump()
         self.logger.dump_file()
+        self.set_training_mode(False)
 
     def save(self, model_dir, step):
         import os

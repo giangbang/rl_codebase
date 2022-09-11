@@ -80,7 +80,7 @@ class ReplayBuffer(object):
             timeout_shape = self.dones.shape[1:]
             # [Important] Handle timeout separately for infinite horizon
             timeout = info.get("TimeLimit.truncated", np.zeros(timeout_shape, dtype=bool))
-            self.dones[self.idx] *= (1 - timeout).reshape(*timeout_shape)
+            self.dones[self.idx] *= (1 - timeout).reshape(timeout_shape)
 
         self.idx = (self.idx + 1) % self.capacity
         self.full = self.full or self.idx == 0
