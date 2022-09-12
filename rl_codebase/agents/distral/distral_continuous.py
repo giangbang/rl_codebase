@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import gym
 import numpy as np
-from .models import *
+from rl_codebase.agents.distral.models import ContinuousDistralActor
 from rl_codebase.agents.sac import Critic
 
 

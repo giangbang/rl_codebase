@@ -10,7 +10,7 @@ from rl_codebase.core import (
 from rl_codebase.core.utils import *
 from rl_codebase.agents.sac import ContinuousSAC, DiscreteSAC
 import gym
-from .pcgrad import CorePCGrad
+from rl_codebase.agents.pcgrad.pcgrad import CorePCGrad
 
 
 class PCGrad:

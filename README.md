@@ -19,15 +19,10 @@ pip install -e .
 
 Some popular RL algorithms have been implemented in `rl_codebase` to provide quick benchmarking.
 
-<<<<<<< HEAD
-- [x] SAC
-- [ ] Distral
-- [ ] PCGrad
-=======
+
 - [x] [SAC](https://arxiv.org/pdf/1801.01290): support both continuous and discrete action spaces. When training with multitask environments, each tasks is trained on a separated agent as if they are independent experiments. This serves as a baseline for other multi-task algorithms.
 - [ ] Distral
 - [x] [PCGrad](https://arxiv.org/pdf/2001.06782)   
->>>>>>> bce7a2c322914a6cfa19ba66a43bc49657d66e8f
 
 ### Example
 

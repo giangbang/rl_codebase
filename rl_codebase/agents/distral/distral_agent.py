@@ -11,7 +11,7 @@ import torch
 import gym
 import numpy as np
 import torch.nn as nn
-from .distral_continuous import ContinuousDistral
+from rl_codebase.agents.distral.distral_continuous import ContinuousDistral
 
 
 class Distral:
@@ -58,7 +58,8 @@ class Distral:
 
         self.agents = nn.ModuleList([
             ContinuousDistral(**distral_kwargs)
-        ] for _ in range(env.num_envs))
+            for _ in range(env.num_envs)
+        ])
 
         self.distill_agent = ContinuousDistral(**distral_kwargs)
 
@@ -75,7 +76,8 @@ class Distral:
             batch = buffer.sample()
             for i, a in enumerate(self.agents):
                 task_batch = batch.get_task(i)
-                critic_loss, actor_loss = a.update(task_batch)
+                critic_loss, actor_loss = a.update(task_batch, self.distill_agent)
+                self.distill_agent.update_distill(task_batch)
 
                 critic_losses.append(critic_loss)
                 actor_losses.append(actor_loss)

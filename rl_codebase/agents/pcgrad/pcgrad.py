@@ -2,7 +2,7 @@ from typing import Union, Type
 from rl_codebase.agents.sac import ContinuousSAC, DiscreteSAC
 from rl_codebase.core.buffers import BufferTransition, Transition
 from rl_codebase.core.utils import is_image_space, get_obs_shape
-from .pcgrad_optim import PCGradOptim
+from rl_codebase.agents.pcgrad.pcgrad_optim import PCGradOptim
 import torch.nn.functional as F
 import torch
 import numpy as np

@@ -6,7 +6,7 @@ import torch
 import gym
 import torch.nn as nn
 import torch.nn.functional as F
-from .models import *
+from rl_codebase.agents.sac.models import ContinuousSACActor, Critic
 
 
 class ContinuousSAC(nn.Module):
