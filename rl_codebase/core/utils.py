@@ -1,6 +1,7 @@
 # these functions in this file are borrowed from stable-baselines3
 from typing import Dict, Tuple, Union, List
 from gym import spaces
+from datetime import datetime
 import gym
 import numpy as np
 
@@ -75,9 +76,11 @@ def get_action_space(env: gym.Env):
         return env.single_action_space
     return env.action_space
 
-def wrap_vec_env(env: List[gym.Env]):
+def get_time_now_as_str():
+    return datetime.now().strftime('%Y-%m-%d_%H%M%S')
+    
+def get_env_name(env: gym.Env):
     if isinstance(env, gym.vector.VectorEnv):
-        return env
-    if not isinstance(env, list):
-        env = [env]
-    return gym.vector.SyncVectorEnv([lambda: e for e in env])
+        # Access the first sub-environment
+        env = env.envs[0]
+    return env.unwrapped.spec.id
