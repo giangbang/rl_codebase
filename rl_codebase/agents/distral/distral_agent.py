@@ -7,13 +7,14 @@ from rl_codebase.core import (
     get_observation_space,
     get_action_space,
 )
-from rl_codebase.core.utils import *
-from rl_codebase.agents.sac import ContinuousSAC, DiscreteSAC
+import torch
 import gym
-from .pcgrad import CorePCGrad
+import numpy as np
+import torch.nn as nn
+from .distral_continuous import ContinuousDistral
 
 
-class PCGrad:
+class Distral:
     def __init__(
             self,
             env,
@@ -23,9 +24,10 @@ class PCGrad:
             batch_size: int = 256,
             tau: float = 0.005,
             gamma: float = 0.99,
+            alpha: float = 0.5,
+            beta: float = 5,
             num_layers=3,
             hidden_dim=256,
-            init_temperature=.2,
             device: str = 'cpu',
             log_path=None,
     ):
@@ -41,20 +43,24 @@ class PCGrad:
         self.observation_space = get_observation_space(env)
         self.action_space = get_action_space(env)
 
-        sac_agent_cls = DiscreteSAC if isinstance(self.action_space, gym.spaces.Discrete) else ContinuousSAC
-        self.agent = CorePCGrad(
-            sac_agent_cls=sac_agent_cls,
+        distral_kwargs = dict(
             observation_space=self.observation_space,
             action_space=self.action_space,
-            num_envs=env.num_envs,
             learning_rate=learning_rate,
             gamma=gamma,
             tau=tau,
             num_layers=num_layers,
             hidden_dim=hidden_dim,
-            init_temperature=init_temperature,
+            alpha=alpha,
+            beta=beta,
             device=device
         )
+
+        self.agents = nn.ModuleList([
+            ContinuousDistral(**distral_kwargs)
+        ] for _ in range(env.num_envs))
+
+        self.distill_agent = ContinuousDistral(**distral_kwargs)
 
         self.buffer = ReplayBuffer(self.observation_space, self.action_space, buffer_size,
                                    batch_size, device, env.num_envs)
@@ -63,22 +69,19 @@ class PCGrad:
         self.logger = Logger(log_dir=log_path)
 
     def update(self, buffer, gradient_steps: int = 1):
-        critic_losses, actor_losses, alpha_losses = [], [], []
-        alpha = []
-        batch = buffer.sample()
+        critic_losses, actor_losses= [], []
+
         for _ in range(gradient_steps):
-            critic_loss, actor_loss, alpha_loss = self.agent.update(batch)
+            batch = buffer.sample()
+            for i, a in enumerate(self.agents):
+                task_batch = batch.get_task(i)
+                critic_loss, actor_loss = a.update(task_batch)
 
-            critic_losses.append(critic_loss)
-            actor_losses.append(actor_loss)
-            alpha_losses.append(alpha_loss)
-            alpha.append(self.agent.log_ent_coef.exp().mean().detach().cpu().item())
-
+                critic_losses.append(critic_loss)
+                actor_losses.append(actor_loss)
         report = {
             'train.critic_loss': np.mean(critic_losses),
             'train.actor_loss': np.mean(actor_losses),
-            'train.alpha_loss': np.mean(alpha_losses),
-            'train.alpha': np.mean(alpha)
         }
         return report
 
@@ -90,8 +93,11 @@ class PCGrad:
               train_freq: int = 1,
               gradient_steps: int = 1,
               ):
+        self.set_training_mode(True)
         train_report = {}
-        eval_freq = int(eval_freq + self.env.num_envs-1) // self.env.num_envs
+
+        eval_freq = int(eval_freq + self.env.num_envs - 1) // self.env.num_envs
+
         for step, (transition, time_report) in enumerate(collect_transitions(self.env,
                                                                              self, total_timesteps, start_step)):
             state, action, reward, next_state, done, info = transition
@@ -106,11 +112,22 @@ class PCGrad:
                 self.logger.dict_record(train_report)
 
                 if self.eval_env:
+                    self.set_training_mode(False)
                     eval_report = evaluate_policy(self.eval_env, self,
                                                   num_eval_episodes=n_eval_episodes)
+                    self.set_training_mode(True)
                     self.logger.dict_record(eval_report)
                 self.logger.dump()
         self.logger.dump_file()
+        self.set_training_mode(False)
 
-    def select_action(self, state, deterministic=True):
-        return self.agent.select_action(state, deterministic=deterministic).reshape(self.env.action_space.shape)
+    def set_training_mode(self, mode: bool) -> None:
+        self.agents.train(mode)
+        self.distill_agent.train(mode)
+
+    def select_action(self, state, deterministic: bool = False):
+        action = []
+        for s, a in zip(state, self.agents):
+            ac = a.select_action(s, deterministic=deterministic)
+            action.append(ac)
+        return np.array(action).reshape(self.env.action_space.shape)

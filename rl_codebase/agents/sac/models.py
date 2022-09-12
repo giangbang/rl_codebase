@@ -27,7 +27,7 @@ class DiscreteSACActor(nn.Module):
 
     def forward(self, x):
         return self.actor(x)
-        
+
     def probs(self, x, compute_log_pi=False):
         logits = self.forward(x)
         distribution = torch.distributions.Categorical(logits=logits)
@@ -158,6 +158,6 @@ class Critic(nn.Module):
         return self._online_q(x, a)
 
     def polyak_update(self, tau):
-        """Exponential evaraging of the online q network"""
+        """Exponential averaging of the online q network"""
         for target, online in zip(self._target_q.parameters(), self._online_q.parameters()):
             target.data.copy_(target.data * (1 - tau) + tau * online.data)

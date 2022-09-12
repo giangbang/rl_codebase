@@ -4,6 +4,7 @@ import sys
 import time
 import numpy as np
 from collections import deque
+from .eval import evaluate_policy
 import copy
 
 
@@ -37,11 +38,11 @@ def collect_transitions(env, agent, total_timesteps, start_step, eval_freq: int 
 
     report = {}
     state = env.reset()
-    
+
     total_timesteps = int(total_timesteps + env.num_envs - 1) // env.num_envs
     eval_freq = int(eval_freq + env.num_envs - 1) // env.num_envs
-    
-    for step in range(total_timesteps+1):
+
+    for step in range(total_timesteps + 1):
         if step < start_step:
             action = env.action_space.sample()
         else:
@@ -55,7 +56,7 @@ def collect_transitions(env, agent, total_timesteps, start_step, eval_freq: int 
             if d:
                 rewards_episode_buffer[i].extend([episode_rewards[i]])
                 episode_rewards[i] = 0
-                
+
         # As the VectorEnv resets automatically, `next_state` is already the
         # first observation of the next episode
         if 'final_observation' in info:
