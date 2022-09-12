@@ -3,7 +3,7 @@ import gym
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
-from .models import *
+from rl_codebase.agents.sac.models import DiscreteSACActor, Critic
 
 
 class DiscreteSAC(nn.Module):
