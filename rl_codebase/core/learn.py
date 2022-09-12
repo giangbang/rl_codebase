@@ -22,8 +22,8 @@ def collect_transitions(env, agent, total_timesteps, start_step, eval_freq: int 
     :param start_step: randomly take action at some first timesteps
     :param total_timesteps: total number of timestep to interact with 
         environment, if `gym.vector.VectorEnv` is provided, each env will be
-        run with `total_timesteps` steps, making total of 
-        `total_timesteps*num_envs` steps
+        run with `total_timesteps/num_envs` steps (round up to nearest integer), 
+        making total of ~ `total_timesteps` steps.
     :return: a tuple (states, actions, rewards, next_state, done, info)
         at every timestep, and some additional info as python dict (time_elapsed, etc)
     """
@@ -36,8 +36,11 @@ def collect_transitions(env, agent, total_timesteps, start_step, eval_freq: int 
     rewards_episode_buffer = [deque(maxlen=50) for _ in range(env.num_envs)]
 
     report = {}
-
     state = env.reset()
+    
+    total_timesteps = int(total_timesteps + env.num_envs - 1) // env.num_envs
+    eval_freq = int(eval_freq + env.num_envs - 1) // env.num_envs
+    
     for step in range(total_timesteps+1):
         if step < start_step:
             action = env.action_space.sample()

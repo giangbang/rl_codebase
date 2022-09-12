@@ -1,11 +1,11 @@
-from rl_codebase.cmn import (
+from rl_codebase.core import (
     ReplayBuffer,
     evaluate_policy,
     collect_transitions,
     Logger,
     wrap_vec_env
 )
-from rl_codebase.cmn.utils import *
+from rl_codebase.core.utils import *
 from .sac_continuous import ContinuousSAC
 from .sac_discrete import DiscreteSAC
 import gym

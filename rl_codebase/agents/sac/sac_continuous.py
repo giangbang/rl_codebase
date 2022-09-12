@@ -1,4 +1,4 @@
-from rl_codebase.cmn import (
+from rl_codebase.core import (
     get_observation_space,
     get_action_space
 )

@@ -3,7 +3,7 @@ import torch.nn as nn
 import gym
 import numpy as np
 
-from rl_codebase.cmn import (
+from rl_codebase.core import (
     create_net,
     get_action_dim,
     get_obs_shape,
