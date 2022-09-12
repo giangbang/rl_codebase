@@ -159,5 +159,7 @@ class Critic(nn.Module):
 
     def polyak_update(self, tau):
         """Exponential averaging of the online q network"""
-        for target, online in zip(self._target_q.parameters(), self._online_q.parameters()):
-            target.data.copy_(target.data * (1 - tau) + tau * online.data)
+        with torch.no_grad():
+            for target, online in zip(self._target_q.parameters(), self._online_q.parameters()):
+                target.data.mul_(1 - tau)
+                torch.add(target.data, online.data, alpha=tau, out=target.data)
