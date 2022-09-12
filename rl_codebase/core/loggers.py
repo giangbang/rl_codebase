@@ -1,16 +1,41 @@
 import csv
+from .utils import get_time_now_as_str
 
 
 class Logger:
-    def __init__(self, log_dir=None, file_name='progress.csv'):
+    """
+    Logger class, logs output to stdout and csv file
+    The structure of the saved folder is as follows:
+    `log_dir` 
+    │
+    └───`env_name`
+    │   │
+    │   └───`exp_name`
+    │       │   `file_name`
+    │       │   `file_name`
+    │       │   ...
+    │   ...
+    """
+    def __init__(self, log_dir='logs', env_name=None, exp_name=None,
+            file_name='progress.csv'):
         self.log_dir = log_dir
         self.log_to_file = log_dir is not None
         self.name_to_vals = {}
         
         if self.log_to_file:
-            assert file_name.endswith('.csv')
+            if not file_name.endswith('.csv'): 
+                file_name += '.csv'    
+            file_name = get_time_now_as_str() + file_name
+            
             import os
-            self.file_dir = os.path.join(self.log_dir, file_name)
+            self.file_dir = os.path.join(self.log_dir, 
+                env_name, exp_name, file_name)
+            
+            # File name already exists
+            if os.path.isfile(self.file_dir):
+                file_name = get_time_now_as_str() + file_name
+                self.file_dir = os.path.join(self.log_dir, 
+                    env_name, exp_name, file_name)
             os.makedirs(log_dir, exist_ok=True)
             self.csv_file = open(self.file_dir, 'w', encoding='utf8')
             self.csv_writer = None
