@@ -89,6 +89,7 @@ class PCGrad:
               gradient_steps: int = 1,
               ):
         train_report = {}
+        eval_freq = int(eval_freq + self.env.num_envs-1) // self.env.num_envs
         for step, (transition, time_report) in enumerate(collect_transitions(self.env,
                                                                              self, total_timesteps, start_step)):
             state, action, reward, next_state, done, info = transition

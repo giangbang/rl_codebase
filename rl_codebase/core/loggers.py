@@ -16,7 +16,7 @@ class Logger:
     │       │   ...
     │   ...
     """
-    def __init__(self, log_dir='logs', env_name=None, exp_name=None,
+    def __init__(self, log_dir='logs', env_name='env_name', exp_name='exp_name',
             file_name='progress.csv'):
         self.log_dir = log_dir
         self.log_to_file = log_dir is not None
@@ -29,15 +29,12 @@ class Logger:
             
             import os
             self.file_dir = os.path.join(self.log_dir, 
-                env_name, exp_name, file_name)
+                env_name, exp_name)
             
-            # File name already exists
-            if os.path.isfile(self.file_dir):
-                file_name = get_time_now_as_str() + file_name
-                self.file_dir = os.path.join(self.log_dir, 
-                    env_name, exp_name, file_name)
-            os.makedirs(log_dir, exist_ok=True)
-            self.csv_file = open(self.file_dir, 'w', encoding='utf8')
+            os.makedirs(self.file_dir, exist_ok=True)
+            self.csv_dir = os.path.join(self.file_dir, file_name)
+            
+            self.csv_file = open(self.csv_dir, 'w', encoding='utf8')
             self.csv_writer = None
         
     def record(self, key: str, val):

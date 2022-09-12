@@ -3,7 +3,8 @@ from rl_codebase.core import (
     evaluate_policy,
     collect_transitions,
     Logger,
-    wrap_vec_env
+    wrap_vec_env,
+    get_env_name
 )
 from rl_codebase.core.utils import *
 from .sac_continuous import ContinuousSAC
@@ -60,7 +61,8 @@ class SAC:
 
         self.device = device
         self.log_path = log_path
-        self.logger = Logger(log_dir=log_path)
+        env_name = get_env_name(env)
+        self.logger = Logger(log_dir=log_path, env_name=env_name, exp_name='SAC')
 
     def select_action(self, state, deterministic: bool = False):
         action = []
@@ -101,6 +103,9 @@ class SAC:
               ):
         self.set_training_mode(True)
         train_report = {}
+        
+        eval_freq = int(eval_freq + self.env.num_envs-1) // self.env.num_envs
+        
         for step, (transition, time_report) in enumerate(collect_transitions(self.env,
                                                                              self, total_timesteps, start_step)):
             state, action, reward, next_state, done, info = transition

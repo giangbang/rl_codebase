@@ -78,3 +78,9 @@ def get_action_space(env: gym.Env):
 
 def get_time_now_as_str():
     return datetime.now().strftime('%Y-%m-%d_%H%M%S')
+    
+def get_env_name(env: gym.Env):
+    if isinstance(env, gym.vector.VectorEnv):
+        # Access the first sub-environment
+        env = env.envs[0]
+    return env.unwrapped.spec.id
