@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import gym
 
-from rl_codebase.agents.sac import ContinuousSACActor
+from rl_codebase.agents.sac import ContinuousSACActor, DiscreteSACActor
 
 def atanh(x: torch.Tensor):
     """
@@ -50,3 +50,8 @@ class ContinuousDistralActor(ContinuousSACActor):
         assert log_squash.shape == log_pi_normal.shape
         return log_squash
 
+class DiscreteistralActor(DiscreteSACActor):
+    def log_probs(self, x, action):
+        logits = self.forward(x)
+        distribution = torch.distributions.Categorical(logits=logits)
+        return distribution.log_prob(action)
