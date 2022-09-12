@@ -68,7 +68,9 @@ def evaluate_policy(env, agent, deterministic: bool = True,
             success = np.array(success, dtype=float)
             has_success_metric = True
             assert success.shape == success_rate.shape
-            success_rate += success * remaining_tasks
+            # Some environmets do not hault after `success`
+            # Thus, we only count the `success` at the end of the episode
+            success_rate += success * remaining_tasks * done
 
         if save_vid:
             stop_record = np.bitwise_or(done, stop_record)

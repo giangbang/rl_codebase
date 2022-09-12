@@ -17,7 +17,7 @@ class DiscreteSAC(nn.Module):
             hidden_dim=256,
             init_temperature=1,
             device='cpu',
-            target_entropy_ratio=0.3,
+            target_entropy_ratio=0.25,
     ):
         super().__init__()
         self.gamma = gamma
