@@ -44,7 +44,7 @@ class Distral(OffPolicyAgent):
 
         self.agents = nn.ModuleList([
             distral_cls(**distral_kwargs)
-            for _ in range(env.num_envs)
+            for _ in range(self.env.num_envs)
         ])
 
         self.distill_agent = distral_cls(**distral_kwargs)

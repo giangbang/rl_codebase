@@ -1,11 +1,3 @@
-from rl_codebase.core import (
-    ReplayBuffer,
-    evaluate_policy,
-    collect_transitions,
-    Logger,
-    wrap_vec_env,
-    get_env_name
-)
 from rl_codebase.core.utils import *
 from rl_codebase.agents.base import OffPolicyAgent
 from .sac_continuous import ContinuousSAC
@@ -45,7 +37,7 @@ class SAC(OffPolicyAgent):
                       hidden_dim=hidden_dim,
                       init_temperature=init_temperature,
                       device=device)
-            for _ in range(env.num_envs)
+            for _ in range(self.env.num_envs)
         ])
 
     def _select_action(self, state, deterministic: bool = False):
@@ -90,5 +82,5 @@ class SAC(OffPolicyAgent):
             torch.load('%s/SACAgent_%s.pt' % (model_dir, step))
         )
 
-    def set_training_mode(self, mode: bool=False) -> None:
+    def set_training_mode(self, mode: bool = False) -> None:
         self.agents.train(mode)
