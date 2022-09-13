@@ -39,6 +39,9 @@ class ContinuousDistral(nn.Module):
         self.critic_optimizer = torch.optim.Adam(
             self.critic._online_q.parameters(), lr=learning_rate,
         )
+        
+        self.ent_coef = 1 / self.beta
+        self.cross_ent_coef = self.alpha / self.beta
 
     def critic_loss(self, batch, distill_policy: 'ContinuousDistral'):
         # Compute target Q
@@ -46,12 +49,11 @@ class ContinuousDistral(nn.Module):
             next_pi, next_log_pi = self.actor.sample(batch.next_states, compute_log_pi=True)
             next_q_vals = self.critic.target_q(batch.next_states, next_pi)
             next_q_val = torch.minimum(*next_q_vals)
-
-            ent_coef = 1 / self.beta
-            next_q_val = next_q_val - ent_coef * next_log_pi
+            
+            next_q_val = next_q_val - self.ent_coef * next_log_pi
 
             log_prob_distill = distill_policy.actor.log_probs(batch.next_states, next_pi)
-            next_q_val = next_q_val + self.alpha / self.beta * log_prob_distill
+            next_q_val = next_q_val + self.cross_ent_coef * log_prob_distill
 
             target_q_val = batch.rewards + (1 - batch.dones) * self.gamma * next_q_val
 
@@ -62,7 +64,7 @@ class ContinuousDistral(nn.Module):
 
     def log_loss(self, batch):
         log_distill = self.actor.log_probs(batch.states, batch.actions)
-        log_loss = -self.alpha/self.beta * log_distill.mean()
+        log_loss = -self.cross_ent_coef * log_distill.mean()
         return log_loss
 
     def update_distill(self, batch):
@@ -82,7 +84,7 @@ class ContinuousDistral(nn.Module):
 
         log_prob_distill = distill_policy.actor.log_probs(batch.states, pi)
 
-        actor_loss = (1 / self.beta * log_pi - q_val - self.alpha / self.beta * log_prob_distill).mean()
+        actor_loss = (self.ent_coef * log_pi - q_val - self.cross_ent_coef * log_prob_distill).mean()
 
         return actor_loss
 

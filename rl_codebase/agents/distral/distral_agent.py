@@ -12,6 +12,7 @@ import gym
 import numpy as np
 import torch.nn as nn
 from rl_codebase.agents.distral.distral_continuous import ContinuousDistral
+from rl_codebase.agents.distral.distral_discrete import DiscreteDistral
 
 
 class Distral:
@@ -55,9 +56,11 @@ class Distral:
             beta=beta,
             device=device
         )
+        
+        distral_cls = DiscreteDistral if isinstance(self.action_space) else ContinuousDistral
 
         self.agents = nn.ModuleList([
-            ContinuousDistral(**distral_kwargs)
+            distral_cls(**distral_kwargs)
             for _ in range(env.num_envs)
         ])
 

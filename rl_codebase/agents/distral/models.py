@@ -11,20 +11,6 @@ def atanh(x: torch.Tensor):
     return 0.5 * (x.log1p() - (-x).log1p())
 
 class ContinuousDistralActor(ContinuousSACActor):
-    def __init__(
-            self,
-            observation_space: gym.spaces,
-            action_space: gym.spaces,
-            num_layer: int = 3,
-            hidden_dim=256,
-    ):
-        super().__init__(
-            observation_space=observation_space,
-            action_space=action_space,
-            num_layer=num_layer,
-            hidden_dim=hidden_dim
-        )
-
     def log_probs(self, x, squashed_action):
         """
         Compute log prob of the action a
@@ -51,7 +37,14 @@ class ContinuousDistralActor(ContinuousSACActor):
         return log_squash
 
 class DiscreteistralActor(DiscreteSACActor):
-    def log_probs(self, x, action):
+    def cross_ent(self, x, action_pi):
+        """
+        Calculate the cross entropy of the current policy under given `x`
+        with the distribution `action_pi`
+        """
         logits = self.forward(x)
         distribution = torch.distributions.Categorical(logits=logits)
-        return distribution.log_prob(action)
+        log_probs = distribution.logits
+        assert action_pi.shape == log_probs.shape
+        cross_ent = (action_pi * log_probs).sum(dim=1, keepdim=True)
+        return cross_ent

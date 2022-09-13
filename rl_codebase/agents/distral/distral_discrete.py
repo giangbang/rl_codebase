@@ -39,6 +39,9 @@ class DiscreteDistral(nn.Module):
         self.critic_optimizer = torch.optim.Adam(
             self.critic._online_q.parameters(), lr=learning_rate,
         )
+        
+        self.ent_coef = 1 / self.beta
+        self.cross_ent_coef = self.alpha / self.beta
 
     def critic_loss(self, batch, distill_policy: 'DiscreteDistral'):
         # Compute target Q 
@@ -51,9 +54,12 @@ class DiscreteDistral(nn.Module):
             next_q_val = (next_q_val * next_pi).sum(
                 dim=1, keepdims=True
             )
+            
+            next_q_val = next_q_val + self.ent_coef * next_entropy.reshape(-1, 1)
+            
+            cross_ent = distill_policy.actor.cross_ent(batch.next_states, next_pi)
+            next_q_val = next_q_val + self.cross_ent_coef * cross_ent
 
-            ent_coef = torch.exp(log_ent_coef)
-            next_q_val = next_q_val + ent_coef * next_entropy.reshape(-1, 1)
 
             target_q_val = batch.rewards + (1 - batch.dones) * self.gamma * next_q_val
 
@@ -66,12 +72,15 @@ class DiscreteDistral(nn.Module):
 
         return critic_loss
 
-    def log_loss(self, batch):
-        log_distill = self.actor.log_probs(batch.states, batch.actions)
-        log_loss = -self.alpha/self.beta * log_distill.mean()
+    def log_loss(self, batch, policy_pi: 'DiscreteDistral'):
+        with torch.no_grad():
+            pi, _ = self.actor.probs(batch.states, compute_log_pi=False)
+
+        log_distill = self.actor.cross_ent(batch.states, pi)
+        log_loss = -self.cross_ent_coef * log_distill.mean()
         return log_loss
 
-    def update_distill(self, batch):
+    def update_distill(self, batch, policy_pi: 'DiscreteDistral'):
         log_loss = self.log_loss(batch)
 
         self.actor_optimizer.zero_grad()
@@ -79,3 +88,43 @@ class DiscreteDistral(nn.Module):
         self.actor_optimizer.step()
 
         return log_loss.item()
+        
+    def actor_loss(self, batch, distill_policy: 'DiscreteDistral'):
+        pi, entropy = self.actor.probs(batch.states, compute_log_pi=True)
+
+        with torch.no_grad():
+            q_vals = self.critic.online_q(batch.states, pi)
+            q_val = torch.minimum(*q_vals)
+
+        cross_ent = distill_policy.actor.cross_ent(batch.states, pi)
+        assert cross_ent.shape == q_val.shape
+        assert entropy.shape == q_val.shape
+
+        actor_loss = (-self.ent_coef * entropy - q_val - self.cross_ent_coef * cross_ent).mean()
+
+        return actor_loss
+        
+    def update(self, batch, distill_policy: 'DiscreteDistral'):
+        # Update critic
+        critic_loss = self.critic_loss(batch, distill_policy)
+
+        self.critic_optimizer.zero_grad()
+        critic_loss.backward()
+        self.critic_optimizer.step()
+
+        self.critic.polyak_update(self.tau)
+
+        # Update actor
+        actor_loss = self.actor_loss(batch, distill_policy)
+
+        self.actor_optimizer.zero_grad()
+        actor_loss.backward()
+        self.actor_optimizer.step()
+
+        return critic_loss.item(), actor_loss.item()
+
+    def select_action(self, state, deterministic=True):
+        with torch.no_grad():
+            state = torch.FloatTensor(state).to(self.device)
+            if len(state.shape) == 1: state = state.unsqueeze(0)
+            return self.actor.sample(state, deterministic=deterministic)[0].cpu().numpy()
