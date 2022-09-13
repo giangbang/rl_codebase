@@ -7,6 +7,7 @@ from rl_codebase.core import (
     get_env_name
 )
 from rl_codebase.core.utils import *
+from rl_codebase.agents.base import OffPolicyAgent
 from .sac_continuous import ContinuousSAC
 from .sac_discrete import DiscreteSAC
 import gym
@@ -14,7 +15,7 @@ import torch.nn as nn
 import torch
 
 
-class SAC:
+class SAC(OffPolicyAgent):
     def __init__(
             self,
             env,
@@ -30,17 +31,8 @@ class SAC:
             device: str = 'cpu',
             log_path=None,
     ):
-        if not isinstance(env, gym.vector.VectorEnv):
-            env = wrap_vec_env(env)
-
-        if eval_env and not isinstance(eval_env, gym.vector.VectorEnv):
-            eval_env = wrap_vec_env(eval_env)
-
-        self.env = env
-        self.eval_env = eval_env
-
-        self.observation_space = get_observation_space(env)
-        self.action_space = get_action_space(env)
+        super().__init__(env=env, eval_env=eval_env, buffer_size=buffer_size, batch_size=batch_size, device=device,
+                         log_path=log_path)
 
         agent_cls = DiscreteSAC if isinstance(self.action_space, gym.spaces.Discrete) else ContinuousSAC
         self.agents = nn.ModuleList([
@@ -56,28 +48,20 @@ class SAC:
             for _ in range(env.num_envs)
         ])
 
-        self.buffer = ReplayBuffer(self.observation_space, self.action_space, buffer_size,
-                                   batch_size, device, env.num_envs)
-
-        self.device = device
-        self.log_path = log_path
-        env_name = get_env_name(env)
-        self.logger = Logger(log_dir=log_path, env_name=env_name, exp_name='SAC')
-
-    def select_action(self, state, deterministic: bool = False):
+    def _select_action(self, state, deterministic: bool = False):
         action = []
         for s, a in zip(state, self.agents):
             ac = a.select_action(s, deterministic=deterministic)
             action.append(ac)
-        return np.array(action).reshape(self.env.action_space.shape)
+        return action
 
     def update(self, buffer, gradient_steps: int = 1):
         critic_losses, actor_losses, alpha_losses = [], [], []
         alpha = []
-        batch = buffer.sample()
-        for i, a in enumerate(self.agents):
-            task_batch = batch.get_task(i)
-            for _ in range(gradient_steps):
+        for _ in range(gradient_steps):
+            batch = buffer.sample()
+            for i, a in enumerate(self.agents):
+                task_batch = batch.get_task(i)
                 critic_loss, actor_loss, alpha_loss = a.update(task_batch)
 
                 critic_losses.append(critic_loss)
@@ -93,42 +77,6 @@ class SAC:
         }
         return report
 
-    def learn(self,
-              total_timesteps: int,
-              start_step: int = 1000,
-              eval_freq: int = 10000,
-              n_eval_episodes: int = 10,
-              train_freq: int = 1,
-              gradient_steps: int = 1,
-              ):
-        self.set_training_mode(True)
-        train_report = {}
-        
-        eval_freq = int(eval_freq + self.env.num_envs-1) // self.env.num_envs
-        
-        for step, (transition, time_report) in enumerate(collect_transitions(self.env,
-                                                                             self, total_timesteps, start_step)):
-            state, action, reward, next_state, done, info = transition
-
-            self.buffer.add(state, action, reward, next_state, done, info)
-
-            if step % train_freq == 0:
-                train_report = self.update(self.buffer, gradient_steps)
-
-            if step % eval_freq == 0:
-                self.logger.dict_record(time_report)
-                self.logger.dict_record(train_report)
-
-                if self.eval_env:
-                    self.set_training_mode(False)
-                    eval_report = evaluate_policy(self.eval_env, self,
-                                                  num_eval_episodes=n_eval_episodes)
-                    self.set_training_mode(True)
-                    self.logger.dict_record(eval_report)
-                self.logger.dump()
-        self.logger.dump_file()
-        self.set_training_mode(False)
-
     def save(self, model_dir, step):
         import os
         os.makedirs(model_dir, exist_ok=True)
@@ -142,5 +90,5 @@ class SAC:
             torch.load('%s/SACAgent_%s.pt' % (model_dir, step))
         )
 
-    def set_training_mode(self, mode: bool) -> None:
+    def set_training_mode(self, mode: bool=False) -> None:
         self.agents.train(mode)

@@ -16,8 +16,8 @@ class ContinuousDistral(nn.Module):
                  tau: float = 0.005,
                  num_layers=3,
                  hidden_dim=256,
-                 alpha: float = 0.5,# Hyperparam for distral
-                 beta: float = 5,   # Hyperparam for distral
+                 alpha: float = 0.5,  # Hyper param for distral
+                 beta: float = 5,  # Hyper param for distral
                  device='cpu',
                  ):
         super().__init__()
@@ -39,7 +39,7 @@ class ContinuousDistral(nn.Module):
         self.critic_optimizer = torch.optim.Adam(
             self.critic._online_q.parameters(), lr=learning_rate,
         )
-        
+
         self.ent_coef = 1 / self.beta
         self.cross_ent_coef = self.alpha / self.beta
 
@@ -49,7 +49,7 @@ class ContinuousDistral(nn.Module):
             next_pi, next_log_pi = self.actor.sample(batch.next_states, compute_log_pi=True)
             next_q_vals = self.critic.target_q(batch.next_states, next_pi)
             next_q_val = torch.minimum(*next_q_vals)
-            
+
             next_q_val = next_q_val - self.ent_coef * next_log_pi
 
             log_prob_distill = distill_policy.actor.log_probs(batch.next_states, next_pi)
@@ -67,7 +67,7 @@ class ContinuousDistral(nn.Module):
         log_loss = -self.cross_ent_coef * log_distill.mean()
         return log_loss
 
-    def update_distill(self, batch):
+    def update_distill(self, batch, policy_pi=None):
         log_loss = self.log_loss(batch)
 
         self.actor_optimizer.zero_grad()

@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from collections import namedtuple
 import gym
-from .utils import *
+from rl_codebase.core.utils import *
 
 Transition = namedtuple('Transition',
                         ('states', 'actions', 'rewards', 'next_states', 'dones'))

@@ -1,10 +1,9 @@
 import gym
-from .vec_env import wrap_vec_env
+from rl_codebase.core.vec_env import wrap_vec_env
 import sys
 import time
 import numpy as np
 from collections import deque
-from .eval import evaluate_policy
 import copy
 
 

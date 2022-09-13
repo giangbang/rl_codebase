@@ -2,8 +2,8 @@ import os
 import gym
 import numpy as np
 from typing import List
-from .vec_env import wrap_vec_env
-from .utils import get_time_now_as_str
+from rl_codebase.core.vec_env import wrap_vec_env
+from rl_codebase.core.utils import get_time_now_as_str
 
 
 def evaluate_policy(env, agent, deterministic: bool = True,
@@ -68,7 +68,7 @@ def evaluate_policy(env, agent, deterministic: bool = True,
             success = np.array(success, dtype=float)
             has_success_metric = True
             assert success.shape == success_rate.shape
-            # Some environmets do not hault after `success`
+            # Some environments do not halt after `success`
             # Thus, we only count the `success` at the end of the episode
             success_rate += success * remaining_tasks * done
 

@@ -60,7 +60,6 @@ class DiscreteDistral(nn.Module):
             cross_ent = distill_policy.actor.cross_ent(batch.next_states, next_pi)
             next_q_val = next_q_val + self.cross_ent_coef * cross_ent
 
-
             target_q_val = batch.rewards + (1 - batch.dones) * self.gamma * next_q_val
 
         current_q_vals = self.critic.online_q(batch.states)
@@ -74,14 +73,14 @@ class DiscreteDistral(nn.Module):
 
     def log_loss(self, batch, policy_pi: 'DiscreteDistral'):
         with torch.no_grad():
-            pi, _ = self.actor.probs(batch.states, compute_log_pi=False)
+            pi, _ = policy_pi.actor.probs(batch.states, compute_log_pi=False)
 
         log_distill = self.actor.cross_ent(batch.states, pi)
         log_loss = -self.cross_ent_coef * log_distill.mean()
         return log_loss
 
     def update_distill(self, batch, policy_pi: 'DiscreteDistral'):
-        log_loss = self.log_loss(batch)
+        log_loss = self.log_loss(batch, policy_pi)
 
         self.actor_optimizer.zero_grad()
         log_loss.backward()
@@ -97,6 +96,10 @@ class DiscreteDistral(nn.Module):
             q_val = torch.minimum(*q_vals)
 
         cross_ent = distill_policy.actor.cross_ent(batch.states, pi)
+        q_val = (pi * q_val).sum(
+            dim=1, keepdims=True
+        )
+        entropy = entropy.reshape(-1, 1)
         assert cross_ent.shape == q_val.shape
         assert entropy.shape == q_val.shape
 

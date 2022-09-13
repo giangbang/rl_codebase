@@ -1,5 +1,5 @@
 import csv
-from .utils import get_time_now_as_str
+from rl_codebase.core.utils import get_time_now_as_str
 
 
 class Logger:
