@@ -1,1 +1,1 @@
-from .distral_agent import Distral
+from rl_codebase.agents.distral.distral_agent import Distral

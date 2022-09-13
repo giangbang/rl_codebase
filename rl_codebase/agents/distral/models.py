@@ -36,7 +36,7 @@ class ContinuousDistralActor(ContinuousSACActor):
         assert log_squash.shape == log_pi_normal.shape
         return log_squash
 
-class DiscreteistralActor(DiscreteSACActor):
+class DiscreteDistralActor(DiscreteSACActor):
     def cross_ent(self, x, action_pi):
         """
         Calculate the cross entropy of the current policy under given `x`
