@@ -79,13 +79,12 @@ class OnehotSAC(nn.Module):
         Given a list of losses, apply the update to the weights of networks
         """
         losses = sum(losses)
-        
+
         optimizer.zero_grad()
         losses.backward()
         optimizer.step()
-        
+
         return losses.item()
-        
 
     def update(self, batch: BufferTransition):
         critic_losses, actor_losses, alpha_losses = [], [], []
@@ -147,7 +146,7 @@ class OnehotSAC(nn.Module):
         broadcast_shape = (state.shape[0], -1)
         onehot = onehot.expand(*broadcast_shape)
 
-        onehot_state =  torch.cat((state, onehot), dim=1)
+        onehot_state = torch.cat((state, onehot), dim=1)
         # Some sanity check
         assert onehot_state[0].shape == self.observation_shape
         return onehot_state

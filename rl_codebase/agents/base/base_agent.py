@@ -30,6 +30,7 @@ class BaseAgent(ABC):
 
         self.env = env
         self.eval_env = eval_env
+        self.num_envs = env.num_envs
 
         self.observation_space = get_observation_space(env)
         self.action_space = get_action_space(env)

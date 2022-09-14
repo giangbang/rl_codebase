@@ -5,6 +5,7 @@ from rl_codebase.core import (
 import torch
 import gym
 import torch.nn as nn
+import numpy as np
 import torch.nn.functional as F
 from rl_codebase.agents.sac.models import ContinuousSACActor, Critic
 
