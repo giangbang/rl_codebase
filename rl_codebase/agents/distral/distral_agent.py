@@ -8,6 +8,9 @@ from rl_codebase.agents.distral.distral_discrete import DiscreteDistral
 
 
 class Distral(OffPolicyAgent):
+    """
+    Distral algorithm, https://arxiv.org/abs/1707.04175
+    """
     def __init__(
             self,
             env,

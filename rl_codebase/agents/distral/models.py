@@ -4,16 +4,18 @@ import gym
 
 from rl_codebase.agents.sac import ContinuousSACActor, DiscreteSACActor
 
+
 def atanh(x: torch.Tensor):
     """
     Inverse of Tanh
     """
     return 0.5 * (x.log1p() - (-x).log1p())
 
+
 class ContinuousDistralActor(ContinuousSACActor):
     def log_probs(self, x, squashed_action):
         """
-        Compute log prob of the action a
+        Compute log prob of the action `squashed_action` in state `x`
         """
         mu, log_std = self.forward(x)
         # constrain log_std inside [log_std_min, log_std_max]
@@ -35,6 +37,7 @@ class ContinuousDistralActor(ContinuousSACActor):
         assert len(log_squash.shape) == 2 and len(squashed_action.shape) == 2
         assert log_squash.shape == log_pi_normal.shape
         return log_squash
+
 
 class DiscreteDistralActor(DiscreteSACActor):
     def cross_ent(self, x, action_pi):

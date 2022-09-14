@@ -6,6 +6,9 @@ import gym
 
 
 class PCGrad(SACMT):
+    """
+    PCGrad, https://arxiv.org/abs/2001.06782
+    """
     def __init__(
             self,
             env,

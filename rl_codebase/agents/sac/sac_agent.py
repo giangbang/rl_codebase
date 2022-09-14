@@ -8,6 +8,9 @@ import torch
 
 
 class SAC(OffPolicyAgent):
+    """
+    Vanilla Soft Actor-Critic algorithm
+    """
     def __init__(
             self,
             env,
