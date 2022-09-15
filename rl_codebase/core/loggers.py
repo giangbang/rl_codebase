@@ -8,17 +8,13 @@ class Logger:
     The structure of the saved folder is as follows:
     `log_dir` 
     │
-    └───`env_name`
-    │   │
-    │   └───`exp_name`
-    │       │   `file_name`
-    │       │   `file_name`
-    │       │   ...
+    └───`env_name`_`exp_name`_`seed`_`time`
+    │   └───`file_name`
     │   ...
     """
 
     def __init__(self, log_dir='logs', env_name='env_name', exp_name='exp_name',
-                 file_name='progress.csv'):
+                 seed=None, file_name='progress.csv'):
         self.log_dir = log_dir
         self.log_to_file = log_dir is not None
         self.name_to_vals = {}
@@ -26,11 +22,10 @@ class Logger:
         if self.log_to_file:
             if not file_name.endswith('.csv'):
                 file_name += '.csv'
-            file_name = get_time_now_as_str() + file_name
 
             import os
-            self.file_dir = os.path.join(self.log_dir,
-                                         env_name, exp_name)
+            exp_folder = f'{env_name}_{exp_name}_{seed}_{get_time_now_as_str()}'
+            self.file_dir = os.path.join(self.log_dir, exp_folder)
 
             os.makedirs(self.file_dir, exist_ok=True)
             self.csv_dir = os.path.join(self.file_dir, file_name)

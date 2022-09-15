@@ -83,7 +83,7 @@ def get_action_space(env: gym.Env):
 
 
 def get_time_now_as_str():
-    return datetime.now().strftime('%Y-%m-%d_%H%M%S')
+    return datetime.now().strftime('%Y-%m-%d.%H%M%S')
 
 
 def get_env_name(env: gym.Env):
