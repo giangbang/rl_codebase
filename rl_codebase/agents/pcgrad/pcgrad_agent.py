@@ -43,7 +43,7 @@ class PCGrad(SACMT):
             sac_agent_cls=sac_agent_cls,
             observation_space=self.observation_space,
             action_space=self.action_space,
-            num_envs=env.num_envs,
+            num_envs=self.env.num_envs,
             learning_rate=learning_rate,
             gamma=gamma,
             tau=tau,

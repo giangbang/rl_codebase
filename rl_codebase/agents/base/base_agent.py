@@ -10,6 +10,7 @@ from rl_codebase.core import (
 )
 
 from abc import ABC, abstractmethod
+import torch
 import gym
 import numpy as np
 
@@ -21,6 +22,7 @@ class BaseAgent(ABC):
             eval_env=None,
             log_path=None,
             device='cpu',
+            seed=None
     ):
         if not isinstance(env, gym.vector.VectorEnv):
             env = wrap_vec_env(env)
@@ -28,6 +30,13 @@ class BaseAgent(ABC):
         if eval_env and not isinstance(eval_env, gym.vector.VectorEnv):
             eval_env = wrap_vec_env(eval_env)
 
+        if seed:
+            import random
+            random.seed(seed)
+            np.random.seed(seed)
+            torch.manual_seed(seed)
+            env.seed(seed=seed)
+            
         self.env = env
         self.eval_env = eval_env
         self.num_envs = env.num_envs
@@ -39,7 +48,7 @@ class BaseAgent(ABC):
         self.log_path = log_path
         env_name = get_env_name(env)
         exp_name = self.__class__.__name__
-        self.logger = Logger(log_dir=log_path, env_name=env_name, exp_name=exp_name)
+        self.logger = Logger(log_dir=log_path, env_name=env_name, exp_name=exp_name, seed=seed)
 
     @abstractmethod
     def learn(self,

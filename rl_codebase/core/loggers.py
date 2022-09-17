@@ -6,11 +6,11 @@ class Logger:
     """
     Logger class, logs output to stdout and csv file
     The structure of the saved folder is as follows:
-    `log_dir` 
-    │
-    └───`env_name`_`exp_name`_`seed`_`time`
-    │   └───`file_name`
-    │   ...
+        `log_dir` 
+        │
+        └───`env_name`_`exp_name`_`seed`_`time`
+        │   └───`file_name`
+        │   ...
     """
 
     def __init__(self, log_dir='logs', env_name='env_name', exp_name='exp_name',
@@ -18,13 +18,15 @@ class Logger:
         self.log_dir = log_dir
         self.log_to_file = log_dir is not None
         self.name_to_vals = {}
+        seed = str(seed)
+        delimiter = '_'
 
         if self.log_to_file:
             if not file_name.endswith('.csv'):
                 file_name += '.csv'
 
             import os
-            exp_folder = f'{env_name}_{exp_name}_{seed}_{get_time_now_as_str()}'
+            exp_folder = delimiter.join([env_name, exp_name, seed, get_time_now_as_str()])
             self.file_dir = os.path.join(self.log_dir, exp_folder)
 
             os.makedirs(self.file_dir, exist_ok=True)
