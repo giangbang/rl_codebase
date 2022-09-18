@@ -31,8 +31,9 @@ class DiscreteSACActor(nn.Module):
     def probs(self, x, compute_log_pi=False):
         logits = self.forward(x)
         distribution = torch.distributions.Categorical(logits=logits)
-        if not compute_log_pi: return distribution.probs, None
-        return distribution.probs, distribution.entropy()
+        probs = distribution.probs
+        if not compute_log_pi: return probs, None
+        return probs, torch.log(probs + 1e-8)
 
     def sample(self, x, compute_log_pi=False, deterministic: bool = False):
         logits = self.forward(x)

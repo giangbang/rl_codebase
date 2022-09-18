@@ -50,17 +50,19 @@ class DiscreteSAC(nn.Module):
     def critic_loss(self, batch, log_ent_coef):
         # Compute target Q 
         with torch.no_grad():
-            next_pi, next_entropy = self.actor.probs(batch.next_states, compute_log_pi=True)
+            next_pi, log_probs = self.actor.probs(batch.next_states, compute_log_pi=True)
 
             next_q_vals = self.critic.target_q(batch.next_states)
             next_q_val = torch.minimum(*next_q_vals)
+            
+            ent_coef = torch.exp(log_ent_coef)
+            
+            assert log_probs.shape == next_q_val.shape
+            next_q_val = next_q_val - ent_coef * log_probs
 
             next_q_val = (next_q_val * next_pi).sum(
                 dim=1, keepdims=True
             )
-
-            ent_coef = torch.exp(log_ent_coef)
-            next_q_val = next_q_val + ent_coef * next_entropy.reshape(-1, 1)
 
             target_q_val = batch.rewards + (1 - batch.dones) * self.gamma * next_q_val
 
@@ -74,7 +76,7 @@ class DiscreteSAC(nn.Module):
         return critic_loss
 
     def actor_loss(self, batch, log_ent_coef):
-        pi, ent = self.actor.probs(batch.states, compute_log_pi=True)
+        pi, log_probs = self.actor.probs(batch.states, compute_log_pi=True)
 
         with torch.no_grad():
             q_vals = self.critic.online_q(batch.states)
@@ -83,18 +85,19 @@ class DiscreteSAC(nn.Module):
         with torch.no_grad():
             ent_coef = torch.exp(log_ent_coef)
 
+        q_val = q_val - ent_coef * log_probs
         actor_loss = (pi * q_val).sum(
             dim=1, keepdims=True
-        ) + ent_coef * ent.reshape(-1, 1)
+        )
         actor_loss = -actor_loss.mean()
 
         return actor_loss
 
     def alpha_loss(self, batch, log_ent_coef):
         with torch.no_grad():
-            pi, entropy = self.actor.probs(batch.states, compute_log_pi=True)
+            pi, log_probs = self.actor.probs(batch.states, compute_log_pi=True)
         alpha_loss = -(
-                log_ent_coef * (-entropy + self.target_entropy).detach()
+                log_ent_coef * (log_probs*pi + self.target_entropy).detach()
         ).mean()
 
         return alpha_loss
