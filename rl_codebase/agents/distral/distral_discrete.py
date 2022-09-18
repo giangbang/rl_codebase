@@ -46,15 +46,16 @@ class DiscreteDistral(nn.Module):
     def critic_loss(self, batch, distill_policy: 'DiscreteDistral'):
         # Compute target Q 
         with torch.no_grad():
-            next_pi, log_probs = self.actor.probs(batch.next_states, compute_log_pi=True)
+            next_pi, next_entropy = self.actor.probs(batch.next_states, compute_log_pi=True)
 
             next_q_vals = self.critic.target_q(batch.next_states)
             next_q_val = torch.minimum(*next_q_vals)
 
-            next_q_val = next_q_val - self.ent_coef * log_probs
             next_q_val = (next_q_val * next_pi).sum(
                 dim=1, keepdims=True
             )
+            
+            next_q_val = next_q_val + self.ent_coef * next_entropy.reshape(-1, 1)
             
             cross_ent = distill_policy.actor.cross_ent(batch.next_states, next_pi)
             next_q_val = next_q_val + self.cross_ent_coef * cross_ent
@@ -88,21 +89,21 @@ class DiscreteDistral(nn.Module):
         return log_loss.item()
         
     def actor_loss(self, batch, distill_policy: 'DiscreteDistral'):
-        pi, log_probs = self.actor.probs(batch.states, compute_log_pi=True)
+        pi, entropy = self.actor.probs(batch.states, compute_log_pi=True)
 
         with torch.no_grad():
             q_vals = self.critic.online_q(batch.states, pi)
             q_val = torch.minimum(*q_vals)
 
         cross_ent = distill_policy.actor.cross_ent(batch.states, pi)
-        assert log_probs.shape == q_val.shape
-        q_val = q_val - self.ent_coef * log_probs
         q_val = (pi * q_val).sum(
             dim=1, keepdims=True
         )
-
+        entropy = entropy.reshape(-1, 1)
         assert cross_ent.shape == q_val.shape
-        actor_loss = (-q_val - self.cross_ent_coef * cross_ent).mean()
+        assert entropy.shape == q_val.shape
+
+        actor_loss = (-self.ent_coef * entropy - q_val - self.cross_ent_coef * cross_ent).mean()
 
         return actor_loss
         

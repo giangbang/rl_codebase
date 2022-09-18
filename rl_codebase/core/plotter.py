@@ -14,15 +14,4 @@
     
     # g = GridPlot(y_names=df.reset_index().env_name.unique())
     
-import matplotlib.pyplot as plt
-import os
-import pandas as pd
-
-
-log_dir = 'logging'
-for dir in os.listdir(log_dir):
-    file = os.path.join(log_dir, dir, 'progress.csv')
-    df = pd.read_csv(file)
-    plt.plot(df['time.total_timesteps'], df['eval.rewards'], label=dir)
-plt.legend()
-plt.show()
+    
