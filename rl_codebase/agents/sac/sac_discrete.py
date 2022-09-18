@@ -96,8 +96,9 @@ class DiscreteSAC(nn.Module):
     def alpha_loss(self, batch, log_ent_coef):
         with torch.no_grad():
             pi, log_probs = self.actor.probs(batch.states, compute_log_pi=True)
+            entropy = - (pi * log_probs).sum(dim=1).mean()
         alpha_loss = -(
-                log_ent_coef * (log_probs*pi + self.target_entropy).detach()
+                log_ent_coef * (-entropy + self.target_entropy).detach()
         ).mean()
 
         return alpha_loss

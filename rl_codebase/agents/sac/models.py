@@ -33,7 +33,9 @@ class DiscreteSACActor(nn.Module):
         distribution = torch.distributions.Categorical(logits=logits)
         probs = distribution.probs
         if not compute_log_pi: return probs, None
-        return probs, torch.log(probs + 1e-8)
+        # We observe that, using log of probs rather than entropy 
+        # from `distribution.entropy()` is more stable in our experiments
+        return probs, torch.log(probs + 1e-6)
 
     def sample(self, x, compute_log_pi=False, deterministic: bool = False):
         logits = self.forward(x)
