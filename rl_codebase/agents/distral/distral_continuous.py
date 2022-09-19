@@ -19,7 +19,8 @@ class ContinuousDistral(nn.Module):
                  alpha: float = 0.5,  # Hyper param for distral
                  beta: float = 5,  # Hyper param for distral
                  device='cpu',
-                 ):
+                 **kwargs
+    ):
         super().__init__()
         self.gamma = gamma
         self.tau = tau

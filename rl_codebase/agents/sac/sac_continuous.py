@@ -22,6 +22,7 @@ class ContinuousSAC(nn.Module):
             hidden_dim=256,
             init_temperature=.2,
             device='cpu',
+            **kwargs,
     ):
         super().__init__()
         self.gamma = gamma

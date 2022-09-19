@@ -19,7 +19,8 @@ class DiscreteDistral(nn.Module):
                  alpha: float = 0.5,# Hyperparam for distral
                  beta: float = 5,   # Hyperparam for distral
                  device='cpu',
-                 ):
+                 **kwargs,
+    ):
         super().__init__()
         self.gamma = gamma
         self.tau = tau

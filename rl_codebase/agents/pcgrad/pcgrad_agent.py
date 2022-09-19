@@ -23,6 +23,7 @@ class PCGrad(SACMT):
             init_temperature=.2,
             device: str = 'cpu',
             log_path=None,
+            **kwargs
     ):
         super().__init__(
             env=env,
@@ -36,7 +37,9 @@ class PCGrad(SACMT):
             hidden_dim=hidden_dim,
             init_temperature=init_temperature,
             device=device,
-            log_path=log_path)
+            log_path=log_path,
+            **kwargs
+        )
 
         sac_agent_cls = DiscreteSAC if isinstance(self.action_space, gym.spaces.Discrete) else ContinuousSAC
         self.agent = CorePCGrad(

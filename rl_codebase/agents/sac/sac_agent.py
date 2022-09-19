@@ -22,12 +22,12 @@ class SAC(OffPolicyAgent):
             gamma: float = 0.99,
             num_layers=3,
             hidden_dim=256,
-            init_temperature=.2,
             device: str = 'cpu',
             log_path=None,
+            **kwargs,
     ):
         super().__init__(env=env, eval_env=eval_env, buffer_size=buffer_size, batch_size=batch_size, device=device,
-                         log_path=log_path)
+                         log_path=log_path, *args, **kwargs,)
 
         agent_cls = DiscreteSAC if isinstance(self.action_space, gym.spaces.Discrete) else ContinuousSAC
         self.agents = nn.ModuleList([
@@ -38,8 +38,9 @@ class SAC(OffPolicyAgent):
                       tau=tau,
                       num_layers=num_layers,
                       hidden_dim=hidden_dim,
-                      init_temperature=init_temperature,
-                      device=device)
+                      device=device,
+                      **kwargs, # This might includes `init_temperature`
+            )
             for _ in range(self.env.num_envs)
         ])
 

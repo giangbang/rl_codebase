@@ -22,7 +22,8 @@ class BaseAgent(ABC):
             eval_env=None,
             log_path=None,
             device='cpu',
-            seed=None
+            seed=None,
+            *args, **kwargs,
     ):
         if not isinstance(env, gym.vector.VectorEnv):
             env = wrap_vec_env(env)
@@ -59,6 +60,7 @@ class BaseAgent(ABC):
               train_freq: int = 1,
               gradient_steps: int = 1,
               report_separate: bool = False,
+              **kwargs,
               ):
         """
         Learn method
@@ -88,7 +90,9 @@ class OffPolicyAgent(BaseAgent, ABC):
             buffer_size: int = 1_000_000,  # 1e6
             batch_size: int = 256,
             device: str = 'cpu',
-            log_path=None, ):
+            log_path=None, 
+            **kwargs,
+    ):
         super().__init__(
             env=env,
             eval_env=eval_env,
@@ -112,7 +116,8 @@ class OffPolicyAgent(BaseAgent, ABC):
               train_freq: int = 1,
               gradient_steps: int = 1,
               report_separate: bool = False,
-              ):
+              **kwargs,
+    ):
         self.set_training_mode(True)
         train_report = {}
 

@@ -20,9 +20,10 @@ class SACMT(OffPolicyAgent):
             init_temperature=.2,
             device: str = 'cpu',
             log_path=None,
+            **kwargs
     ):
         super().__init__(env=env, eval_env=eval_env, buffer_size=buffer_size, batch_size=batch_size, device=device,
-                         log_path=log_path)
+                         log_path=log_path, **kwargs)
 
         sac_agent_cls = DiscreteSAC if isinstance(self.action_space, gym.spaces.Discrete) else ContinuousSAC
         self.agent = OnehotSAC(

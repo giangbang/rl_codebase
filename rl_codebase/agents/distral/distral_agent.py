@@ -26,9 +26,10 @@ class Distral(OffPolicyAgent):
             hidden_dim=256,
             device: str = 'cpu',
             log_path=None,
+            **kwargs,
     ):
         super().__init__(env=env, eval_env=eval_env, buffer_size=buffer_size, batch_size=batch_size, device=device,
-                         log_path=log_path)
+                         log_path=log_path, **kwargs)
 
         distral_kwargs = dict(
             observation_space=self.observation_space,
