@@ -23,7 +23,7 @@ class BaseAgent(ABC):
             log_path=None,
             device='cpu',
             seed=None,
-            *args, **kwargs,
+            **kwargs,
     ):
         if not isinstance(env, gym.vector.VectorEnv):
             env = wrap_vec_env(env)

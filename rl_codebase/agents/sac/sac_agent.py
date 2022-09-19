@@ -27,7 +27,7 @@ class SAC(OffPolicyAgent):
             **kwargs,
     ):
         super().__init__(env=env, eval_env=eval_env, buffer_size=buffer_size, batch_size=batch_size, device=device,
-                         log_path=log_path, *args, **kwargs,)
+                         log_path=log_path, **kwargs,)
 
         agent_cls = DiscreteSAC if isinstance(self.action_space, gym.spaces.Discrete) else ContinuousSAC
         self.agents = nn.ModuleList([

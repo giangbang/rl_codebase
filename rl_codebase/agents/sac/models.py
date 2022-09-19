@@ -106,6 +106,10 @@ class ContinuousSACActor(nn.Module):
 
 
 class DualQNet(nn.Module):
+    """
+    Dual Q network for discrete action space
+    arXiv:1509.06461
+    """
     def __init__(
         self,
         inputs_dim: int, 
@@ -141,10 +145,6 @@ def create_q_net(inputs_dim, output_dim, num_layer, hidden_dim, use_dual_qnet=Tr
         return MLP(inputs_dim, output_dim, num_layer, hidden_dim)
 
 class DoubleQNet(nn.Module):
-    """
-    Dual Q network for discrete action space
-    arXiv:1509.06461
-    """
     def __init__(
             self,
             observation_space: gym.spaces,
