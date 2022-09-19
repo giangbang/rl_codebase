@@ -33,18 +33,18 @@ class DiscreteSAC(nn.Module):
         self.target_entropy = np.log(action_space.n) * target_entropy_ratio
 
         self.actor_optimizer = torch.optim.Adam(
-            self.actor.parameters(), lr=learning_rate,
+            self.actor.parameters(), lr=learning_rate, eps=1e-4
         )
 
         self.critic_optimizer = torch.optim.Adam(
-            self.critic._online_q.parameters(), lr=learning_rate,
+            self.critic._online_q.parameters(), lr=learning_rate, eps=1e-4
         )
 
         self.log_ent_coef = torch.log(init_temperature *
                                       torch.ones(1, device=device)).requires_grad_(True)
 
         self.ent_coef_optimizer = torch.optim.Adam(
-            [self.log_ent_coef], lr=learning_rate
+            [self.log_ent_coef], lr=learning_rate, eps=1e-4
         )
 
     def critic_loss(self, batch, log_ent_coef):
