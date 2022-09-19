@@ -105,7 +105,46 @@ class ContinuousSACActor(nn.Module):
         return squashed_action, log_squash
 
 
+class DualQNet(nn.Module):
+    def __init__(
+        self,
+        inputs_dim: int, 
+        outputs_dim: int, 
+        n_layer: int, 
+        n_unit: int = 256, 
+        activation_fn=nn.Tanh,
+    ):
+        super().__init__()
+        self.inputs_dim = inputs_dim
+        self.outputs_dim = outputs_dim
+
+        net = [nn.Linear(inputs_dim, n_unit), activation_fn()]
+        for _ in range(n_layer - 2):
+            net.append(nn.Linear(n_unit, n_unit))
+            net.append(activation_fn())
+        self.v_head = nn.Linear(n_unit, 1)
+        self.a_head = nn.Linear(n_unit, outputs_dim)
+
+        self.net = nn.Sequential(*net)
+
+    def forward(self, x):
+        x = self.net(x)
+        a = self.a_head(x)
+        v = self.v_head(x)
+        return v + a - a.mean(dim=1, keepdim=True)
+
+
+def create_q_net(inputs_dim, output_dim, num_layer, hidden_dim, use_dual_qnet=True):
+    if use_dual_qnet:
+        return DualQNet(inputs_dim, output_dim, num_layer, hidden_dim)
+    else:
+        return MLP(inputs_dim, output_dim, num_layer, hidden_dim)
+
 class DoubleQNet(nn.Module):
+    """
+    Dual Q network for discrete action space
+    arXiv:1509.06461
+    """
     def __init__(
             self,
             observation_space: gym.spaces,
@@ -123,8 +162,12 @@ class DoubleQNet(nn.Module):
         # If the action space is discrete, output all the action Q values of a state
         output_dim = 1 if not self.is_discrete_action else action_space.n
 
-        self.q1 = MLP(inputs_dim, output_dim, num_layer, hidden_dim)
-        self.q2 = MLP(inputs_dim, output_dim, num_layer, hidden_dim)
+        if self.is_discrete_action:
+            self.q1 = create_q_net(inputs_dim, output_dim, num_layer, hidden_dim, True)
+            self.q2 = create_q_net(inputs_dim, output_dim, num_layer, hidden_dim, True)
+        else:
+            self.q1 = MLP(inputs_dim, output_dim, num_layer, hidden_dim)
+            self.q2 = MLP(inputs_dim, output_dim, num_layer, hidden_dim)
 
     def forward(self, x, a=None):
         if not self.is_discrete_action:
