@@ -1,4 +1,5 @@
 from rl_codebase.core.utils import *
+from rl_codebase.core import RunningMeanDict
 from rl_codebase.agents.base import OffPolicyAgent
 from .sac_continuous import ContinuousSAC
 from .sac_discrete import DiscreteSAC
@@ -52,26 +53,16 @@ class SAC(OffPolicyAgent):
         return action
 
     def update(self, buffer, gradient_steps: int = 1):
-        critic_losses, actor_losses, alpha_losses = [], [], []
-        alpha = []
+        report = RunningMeanDict()
         for _ in range(gradient_steps):
             batch = buffer.sample()
             for i, a in enumerate(self.agents):
                 task_batch = batch.get_task(i)
-                critic_loss, actor_loss, alpha_loss = a.update(task_batch)
+                update_report = a.update(task_batch)
 
-                critic_losses.append(critic_loss)
-                actor_losses.append(actor_loss)
-                alpha_losses.append(alpha_loss)
-                alpha.append(a.log_ent_coef.exp().detach().cpu().item())
-
-        report = {
-            'train.critic_loss': np.mean(critic_losses),
-            'train.actor_loss': np.mean(actor_losses),
-            'train.alpha_loss': np.mean(alpha_losses),
-            'train.alpha': np.mean(alpha)
-        }
-        return report
+                report.update(update_report)
+                
+        return report.to_dict()
 
     def save(self, model_dir, step):
         import os

@@ -33,6 +33,7 @@ def collect_transitions(env, agent, total_timesteps, start_step, eval_freq: int 
 
     start_time = time.time_ns()
     episode_rewards = np.zeros((env.num_envs,), dtype=float)
+    num_episode = 0
     rewards_episode_buffer = [deque(maxlen=50) for _ in range(env.num_envs)]
 
     report = {}
@@ -49,6 +50,7 @@ def collect_transitions(env, agent, total_timesteps, start_step, eval_freq: int 
 
         next_state, reward, done, info = env.step(action)
         episode_rewards += reward
+        num_episode += np.sum(done)
         next_state_to_return = next_state
 
         for i, d in enumerate(done):
@@ -75,6 +77,7 @@ def collect_transitions(env, agent, total_timesteps, start_step, eval_freq: int 
             report['time.time_elapsed'] = time_elapsed
             report['time.total_timesteps'] = num_timestep
             report['time.fps'] = fps
+            report['train.episodes'] = num_episode
             report['train.rewards'] = np.mean([np.mean(ep_rw) for ep_rw in rewards_episode_buffer])
 
         yield (state, action, reward, next_state_to_return, done, info), report

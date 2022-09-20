@@ -18,8 +18,8 @@ class DiscreteSAC(nn.Module):
             hidden_dim=256,
             init_temperature=1,
             device='cpu',
-            target_entropy_ratio=0.2,
-            adam_eps: float = 1e-4,
+            target_entropy_ratio=0.5,
+            adam_eps: float = 1e-8,
             **kwargs,
     ):
         super().__init__()
@@ -48,6 +48,8 @@ class DiscreteSAC(nn.Module):
         self.ent_coef_optimizer = torch.optim.Adam(
             [self.log_ent_coef], lr=learning_rate, eps=adam_eps
         )
+        
+        self.current_policy_entropy = np.log(action_space.n)
 
     def critic_loss(self, batch, log_ent_coef):
         # Compute target Q 
@@ -71,7 +73,7 @@ class DiscreteSAC(nn.Module):
             current_q.gather(1, batch.actions)
             for current_q in current_q_vals
         ]
-        critic_loss = .5 * sum(F.mse_loss(current_q, target_q_val) for current_q in current_q_vals)
+        critic_loss = sum(F.mse_loss(current_q, target_q_val) for current_q in current_q_vals)
 
         return critic_loss
 
@@ -98,6 +100,8 @@ class DiscreteSAC(nn.Module):
         alpha_loss = -(
                 log_ent_coef * (-entropy + self.target_entropy).detach()
         ).mean()
+        
+        self.current_policy_entropy = torch.mean(entropy).item()
 
         return alpha_loss
 
@@ -125,8 +129,14 @@ class DiscreteSAC(nn.Module):
         alpha_loss.backward()
         self.ent_coef_optimizer.step()
 
-        return critic_loss.item(), actor_loss.item(), alpha_loss.item()
-
+        return {
+            'train.critic_loss': critic_loss.item(),
+            'train.actor_loss': actor_loss.item(),
+            'train.alpha_loss': alpha_loss.item(),
+            'train.alpha': torch.exp(self.log_ent_coef.detach().item()),
+            'train.entropy': self.current_policy_entropy
+        }
+        
     def select_action(self, state, deterministic=False):
         with torch.no_grad():
             state = torch.FloatTensor(state).to(self.device)

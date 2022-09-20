@@ -113,7 +113,12 @@ class ContinuousSAC(nn.Module):
         alpha_loss.backward()
         self.ent_coef_optimizer.step()
 
-        return critic_loss.item(), actor_loss.item(), alpha_loss.item()
+        return {
+            'train.critic_loss': critic_loss.item(),
+            'train.actor_loss': actor_loss.item(),
+            'train.alpha_loss': alpha_loss.item(),
+            'train.alpha': torch.exp(self.log_ent_coef.detach().item())
+        }
 
     def select_action(self, state, deterministic=True):
         with torch.no_grad():

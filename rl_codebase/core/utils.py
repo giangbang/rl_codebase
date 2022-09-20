@@ -1,4 +1,4 @@
-# these functions in this file are borrowed from stable-baselines3
+# Some of the functions in this file are borrowed from stable-baselines3
 from typing import Dict, Tuple, Union, List
 from gym import spaces
 from datetime import datetime
@@ -10,6 +10,7 @@ def get_obs_shape(
         observation_space: spaces.Space,
 ) -> Union[Tuple[int, ...], Dict[str, Tuple[int, ...]]]:
     """
+    From Stable-baselines3
     Get the shape of the observation (useful for the buffers).
     :param observation_space:
     :return:
@@ -34,6 +35,7 @@ def get_obs_shape(
 
 def get_action_dim(action_space: spaces.Space) -> int:
     """
+    From Stable-baselines3
     Get the dimension of the action space.
     :param action_space:
     :return:
