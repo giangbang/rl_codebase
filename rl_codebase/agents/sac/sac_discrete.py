@@ -133,7 +133,7 @@ class DiscreteSAC(nn.Module):
             'train.critic_loss': critic_loss.item(),
             'train.actor_loss': actor_loss.item(),
             'train.alpha_loss': alpha_loss.item(),
-            'train.alpha': torch.exp(self.log_ent_coef.detach().item()),
+            'train.alpha': torch.exp(self.log_ent_coef.detach()).item(),
             'train.entropy': self.current_policy_entropy
         }
         
