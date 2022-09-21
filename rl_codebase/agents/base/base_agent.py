@@ -99,8 +99,14 @@ class OffPolicyAgent(BaseAgent, ABC):
             log_path=log_path,
             device=device
         )
-        self.buffer = ReplayBuffer(self.observation_space, self.action_space, buffer_size,
-                                   batch_size, device, self.env.num_envs)
+        self.buffer = ReplayBuffer(
+            observation_space = self.observation_space, 
+            action_space = self.action_space, 
+            capacity = buffer_size,
+            batch_size = batch_size, 
+            device = device, 
+            num_envs = self.env.num_envs
+        )
 
     @abstractmethod
     def update(self, buffer, gradient_steps: int = 1):

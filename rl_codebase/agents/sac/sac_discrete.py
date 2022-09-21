@@ -18,7 +18,7 @@ class DiscreteSAC(nn.Module):
             hidden_dim=256,
             init_temperature=1,
             device='cpu',
-            target_entropy_ratio=0.5,
+            target_entropy_ratio=0.3,
             adam_eps: float = 1e-8,
             **kwargs,
     ):
