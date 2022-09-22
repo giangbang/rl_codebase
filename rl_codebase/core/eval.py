@@ -84,7 +84,7 @@ def evaluate_policy(env, agent, deterministic: bool = True,
             assert success.shape == success_rate.shape
             # Some environments do not halt after `success`
             # Thus, we only count the `success` at the end of the episode
-            success_rate += success
+            success_rate += success * done
 
         if save_vid:
             stop_record = np.bitwise_or(done, stop_record)
@@ -106,11 +106,11 @@ def evaluate_policy(env, agent, deterministic: bool = True,
         if has_success_metric:
             for task_name, success in zip(task_names, success_rate):
                 report[f'eval.{task_name}.success'] = success
-    else:
-        report['eval.rewards'] = np.mean(total_return)
-        report['eval.length'] = np.mean(ep_len)
-        if has_success_metric:
-            report['eval.success'] = np.mean(success_rate)
+    
+    report['eval.rewards'] = np.mean(total_return)
+    report['eval.length'] = np.mean(ep_len)
+    if has_success_metric:
+        report['eval.success'] = np.mean(success_rate)
 
     if save_vid:
         tiled_frames = []
