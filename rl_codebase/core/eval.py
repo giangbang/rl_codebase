@@ -45,6 +45,9 @@ def evaluate_policy(env, agent, deterministic: bool = True,
     num_episodes = np.zeros((env.num_envs,), dtype=int)
     total_return = np.zeros((env.num_envs,), dtype=float)
     success_rate = np.zeros((env.num_envs,), dtype=float)
+    ep_len       = np.zeros((env.num_envs,), dtype=float)
+    current_ep_len = np.zeros((env.num_envs,), dtype=float)
+    current_return = np.zeros((env.num_envs,), dtype=float)
 
     has_success_metric = False  # Some envs do not support success measure
 
@@ -59,9 +62,20 @@ def evaluate_policy(env, agent, deterministic: bool = True,
         next_state, reward, done, info = env.step(action)
 
         state = next_state
-        remaining_tasks = num_episodes < num_eval_episodes
-        total_return += reward * remaining_tasks
+        done = np.array(done)
+        reward = np.array(reward)
+        
+        current_return += reward 
         num_episodes += done
+        current_ep_len += 1
+
+        for i, d in enumerate(done):
+            if d:
+                ep_len[i] += current_ep_len[i]
+                current_ep_len[i] = 0
+                
+                total_return[i] += current_return[i]
+                current_return[i] = 0
 
         if 'success' in info or 'is_success' in info:
             success = info.get('success', info.get('is_success'))
@@ -76,8 +90,9 @@ def evaluate_policy(env, agent, deterministic: bool = True,
             stop_record = np.bitwise_or(done, stop_record)
             frames.append(_get_frames_from_VecEnv(env, stop_record))
 
-    total_return /= num_eval_episodes
+    total_return /= num_episodes
     success_rate /= num_episodes
+    ep_len /= num_episodes
 
     if task_names is None:
         task_names = [f'task_{i}' for i in range(env.num_envs)]
@@ -85,13 +100,15 @@ def evaluate_policy(env, agent, deterministic: bool = True,
         task_names = [task_names]
 
     if report_separated_task:
-        for task_name, reward in zip(task_names, total_return):
+        for task_name, reward, length in zip(task_names, total_return, ep_len):
             report[f'eval.{task_name}.rewards'] = reward
+            report[f'eval.{task_name}.length'] = length
         if has_success_metric:
             for task_name, success in zip(task_names, success_rate):
                 report[f'eval.{task_name}.success'] = success
     else:
         report['eval.rewards'] = np.mean(total_return)
+        report['eval.length'] = np.mean(ep_len)
         if has_success_metric:
             report['eval.success'] = np.mean(success_rate)
 
