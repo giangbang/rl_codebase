@@ -33,8 +33,12 @@ def collect_transitions(env, agent, total_timesteps, start_step, eval_freq: int 
 
     start_time = time.time_ns()
     episode_rewards = np.zeros((env.num_envs,), dtype=float)
+    episode_lengths = np.zeros((env.num_envs,), dtype=float)
+    
     num_episode = 0
     rewards_episode_buffer = [deque(maxlen=50) for _ in range(env.num_envs)]
+    lengths_episode_buffer = [deque(maxlen=50) for _ in range(env.num_envs)]
+    success_count_buffer = [deque(maxlen=50) for _ in range(env.num_envs)]
 
     report = {}
     state = env.reset()
@@ -49,7 +53,12 @@ def collect_transitions(env, agent, total_timesteps, start_step, eval_freq: int 
             action = agent.select_action(state, deterministic=False)
 
         next_state, reward, done, info = env.step(action)
+        reward = np.array(reward)
+        done = np.array(done)
+        
         episode_rewards += reward
+        episode_lengths += 1
+        
         num_episode += np.sum(done)
         next_state_to_return = next_state
 
@@ -57,6 +66,13 @@ def collect_transitions(env, agent, total_timesteps, start_step, eval_freq: int 
             if d:
                 rewards_episode_buffer[i].extend([episode_rewards[i]])
                 episode_rewards[i] = 0
+                
+                lengths_episode_buffer[i].extend([episode_lengths[i]])
+                episode_lengths[i] = 0
+                
+                if 'success' in info or 'is_success' in info:
+                    success = info.get('success', info.get('is_success'))
+                    success_count_buffer[i].extend([success[i]])
 
         # As the VectorEnv resets automatically, `next_state` is already the
         # first observation of the next episode
@@ -79,6 +95,8 @@ def collect_transitions(env, agent, total_timesteps, start_step, eval_freq: int 
             report['time.fps'] = fps
             report['train.episodes'] = num_episode
             report['train.rewards'] = np.mean([np.mean(ep_rw) for ep_rw in rewards_episode_buffer])
+            report['train.lengths'] = np.mean([np.mean(ep_len) for ep_len in lengths_episode_buffer])
+            report['train.success'] = np.mean([np.mean(scc) for scc in success_count_buffer])
 
         yield (state, action, reward, next_state_to_return, done, info), report
         state = next_state
