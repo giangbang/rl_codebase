@@ -70,14 +70,14 @@ def evaluate_policy(env, agent, deterministic: bool = True,
             assert success.shape == success_rate.shape
             # Some environments do not halt after `success`
             # Thus, we only count the `success` at the end of the episode
-            success_rate += success * remaining_tasks * done
+            success_rate += success
 
         if save_vid:
             stop_record = np.bitwise_or(done, stop_record)
             frames.append(_get_frames_from_VecEnv(env, stop_record))
 
     total_return /= num_eval_episodes
-    success_rate /= num_eval_episodes
+    success_rate /= num_episodes
 
     if task_names is None:
         task_names = [f'task_{i}' for i in range(env.num_envs)]
