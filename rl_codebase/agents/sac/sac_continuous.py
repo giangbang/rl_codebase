@@ -117,7 +117,7 @@ class ContinuousSAC(nn.Module):
             'train.critic_loss': critic_loss.item(),
             'train.actor_loss': actor_loss.item(),
             'train.alpha_loss': alpha_loss.item(),
-            'train.alpha': torch.exp(self.log_ent_coef.detach().item())
+            'train.alpha': torch.exp(self.log_ent_coef.detach()).item()
         }
 
     def select_action(self, state, deterministic=True):
