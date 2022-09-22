@@ -146,7 +146,8 @@ class OffPolicyAgent(BaseAgent, ABC):
                     self.set_training_mode(False)
                     eval_report = evaluate_policy(self.eval_env, self,
                                                   num_eval_episodes=n_eval_episodes,
-                                                  report_separated_task=report_separate)
+                                                  report_separated_task=report_separate,
+                                                  **kwargs)
                     self.set_training_mode(True)
                     self.logger.dict_record(eval_report)
                 self.logger.dump()
