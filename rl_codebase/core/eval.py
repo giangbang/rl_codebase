@@ -14,16 +14,16 @@ def evaluate_policy(env, agent, deterministic: bool = True,
     Evaluate the `agent` on the given `env`.
 
     :param env: Environment on which the agent is evaluated, should be an
-        instance of `gym.Env` or `gym.VectorEnv`, the latter will be treated as 
+        instance of `gym.Env` or `gym.VectorEnv`, the latter will be treated as
         multitask environment.
-    :param agent: agent, should implement a function `select_action`, which 
+    :param agent: agent, should implement a function `select_action`, which
         takes two inputs: the current `state` and a flag `deterministic`.
     :param deterministic: use a deterministic policy to evaluate
-    :param save_video_to: dir to the folder for video saving, no video recording 
+    :param save_video_to: dir to the folder for video saving, no video recording
         if `None`.
-    :param num_eval_episodes: number of evaluation environment episode, 
+    :param num_eval_episodes: number of evaluation environment episode,
         in case the environment is multi-task, each task will be evaluated
-        with `num_eval_episodes` episodes, making a total of 
+        with `num_eval_episodes` episodes, making a total of
         `num_eval_episodes * n_tasks` env episodes.
     :param report_separated_task: whether to report seperatedly on each task
         or not, ignore in single-task env.
@@ -64,8 +64,8 @@ def evaluate_policy(env, agent, deterministic: bool = True,
         state = next_state
         done = np.array(done)
         reward = np.array(reward)
-        
-        current_return += reward 
+
+        current_return += reward
         num_episodes += done
         current_ep_len += 1
 
@@ -73,18 +73,16 @@ def evaluate_policy(env, agent, deterministic: bool = True,
             if d:
                 ep_len[i] += current_ep_len[i]
                 current_ep_len[i] = 0
-                
+
                 total_return[i] += current_return[i]
                 current_return[i] = 0
 
-        if 'success' in info or 'is_success' in info:
-            success = info.get('success', info.get('is_success'))
-            success = np.array(success, dtype=float)
-            has_success_metric = True
-            assert success.shape == success_rate.shape
-            # Some environments do not halt after `success`
-            # Thus, we only count the `success` at the end of the episode
-            success_rate += success * done
+            if 'success' in info or 'is_success' in info:
+                success = info.get('success', info.get('is_success'))
+                has_success_metric = True
+                # Some environments do not halt after `success`
+                # Thus, we only count the `success` at the end of the episode
+                success_rate[i] += success[i]
 
         if save_vid:
             stop_record = np.bitwise_or(done, stop_record)
@@ -99,6 +97,7 @@ def evaluate_policy(env, agent, deterministic: bool = True,
     if not isinstance(task_names, list):
         task_names = [task_names]
 
+    # Report separately each task
     if report_separated_task:
         for task_name, reward, length in zip(task_names, total_return, ep_len):
             report[f'eval.{task_name}.rewards'] = reward
@@ -106,7 +105,8 @@ def evaluate_policy(env, agent, deterministic: bool = True,
         if has_success_metric:
             for task_name, success in zip(task_names, success_rate):
                 report[f'eval.{task_name}.success'] = success
-    
+
+    # Report average of all tasks
     report['eval.rewards'] = np.mean(total_return)
     report['eval.length'] = np.mean(ep_len)
     if has_success_metric:
