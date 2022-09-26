@@ -103,6 +103,7 @@ class OnehotSAC(nn.Module):
             critic_losses.append(critic_loss)
 
         critic_loss = self._optimize(critic_losses, self.critic_optimizer)
+        self.sac_agent.critic.polyak_update(self.sac_agent.tau)
 
         # Update actor
         for i, batch_of_task in enumerate(batch_of_tasks):
