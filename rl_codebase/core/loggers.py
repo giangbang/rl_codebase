@@ -46,7 +46,9 @@ class Logger:
 
     def dump(self):
         print('=' * 30)
-        for key, val in self.name_to_vals.items():
+        # Print results in alphabetical order of keyword
+        for key in sorted(self.name_to_vals):
+            val = self.name_to_vals[key]
             print(f"{key:<20} : {_maybe_float_roundoff(val)}")
 
         if self.log_to_file:
