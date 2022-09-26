@@ -11,7 +11,7 @@ import random
 
 
 class PCGradOptim:
-    def __init__(self, optimizer, reduction='mean'):
+    def __init__(self, optimizer, reduction='sum'):
         self._optim, self._reduction = optimizer, reduction
         return
 
