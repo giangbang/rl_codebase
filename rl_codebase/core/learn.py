@@ -83,7 +83,6 @@ def collect_transitions(env, agent, total_timesteps, start_step, eval_freq: int 
                 # Several environments do not stop when success,
                 # so we only count the success signal when the episode is done
                 if 'success' in info or 'is_success' in info:
-                    has_success_metric = True
                     success = info.get('success', info.get('is_success'))
                     success_count_buffer[i].extend([success[i]])
 
@@ -101,8 +100,7 @@ def collect_transitions(env, agent, total_timesteps, start_step, eval_freq: int 
             report['train.episodes'] = num_episode
             report['train.rewards'] = np.mean([np.mean(ep_rw) for ep_rw in rewards_episode_buffer])
             report['train.lengths'] = np.mean([np.mean(ep_len) for ep_len in lengths_episode_buffer])
-            if has_success_metric:
-                report['train.success'] = np.mean([np.mean(scc) for scc in success_count_buffer])
+            report['train.success'] = np.mean([np.mean(scc) for scc in success_count_buffer])
 
         yield (state, action, reward, next_state_to_return, done, info), report
         state = next_state
