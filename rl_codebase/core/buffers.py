@@ -8,7 +8,14 @@ Transition = namedtuple('Transition',
                         ('states', 'actions', 'rewards', 'next_states', 'dones'))
 
 
-class BufferTransition(Transition):
+class BufferTransition():
+    def __init__(self, states, actions, rewards, next_states, dones):
+        self.states = states
+        self.actions = actions
+        self.rewards = rewards
+        self.next_states = next_states
+        self.dones = dones
+
     def get_task(self, task: int):
         states = self.states[:, task]
         actions = self.actions[:, task]
