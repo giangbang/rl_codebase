@@ -11,7 +11,7 @@ setup(
     install_requires=[
         "torch",
         "torchvision",
-        "gym",
+        "gym==0.25.2",
         "numpy",
         "matplotlib",
         "opencv-python",
