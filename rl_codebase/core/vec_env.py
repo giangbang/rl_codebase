@@ -16,7 +16,7 @@ class DummyVecEnv(SyncVectorEnv):
         obs_shape = self.single_observation_space.shape
         infos_key = set()
         next_states, rewards, dones, infos = [], [], [], []
-        for i, (env , action) in enumerate(self.envs, actions):
+        for i, (env , action) in enumerate(zip(self.envs, actions)):
             next_state, reward, done, info = env.step(action)
             
             if done:
@@ -37,10 +37,10 @@ class DummyVecEnv(SyncVectorEnv):
                 val.append(inf.get(key, None))
             info_return[key] = np.array(val)
             
-        return np.array(next_states).reshape(self.num_envs, *obs_shape),
-               np.array(rewards).reshape(self.num_envs, -1),
-               np.array(dones).reshape(self.num_envs, -1),
-               info_return
+        return (np.array(next_states).reshape(self.num_envs, *obs_shape),
+               np.array(rewards).reshape(self.num_envs,),
+               np.array(dones).reshape(self.num_envs,),
+               info_return)
         
 
 class VecEnv(SyncVectorEnv):
