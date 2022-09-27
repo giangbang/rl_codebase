@@ -4,7 +4,7 @@ from gym.vector import SyncVectorEnv
 from rl_codebase.core.utils import get_obs_shape, get_action_dim
 
 
-class DummyVecEnv(SyncVectorEnv):
+class DummyVecEnv(VecEnv):
     def reset(self):
         obs_shape = self.single_observation_space.shape
         states = []
