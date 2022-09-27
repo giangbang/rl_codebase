@@ -81,4 +81,4 @@ def wrap_vec_env(env):
     if not isinstance(env, list):
         env = [env]
     env_fns = list(map(lambda e: lambda: e, env))
-    return VecEnv(env_fns)
+    return DummyVecEnv(env_fns)
