@@ -69,6 +69,10 @@ def evaluate_policy(env, agent, deterministic: bool = True,
         num_episodes += done
         current_ep_len += 1
 
+        if 'success' in info or 'is_success' in info:
+            success = info.get('success', info.get('is_success'))
+            has_success_metric = True
+
         for i, d in enumerate(done):
             if d:
                 ep_len[i] += current_ep_len[i]
@@ -76,10 +80,7 @@ def evaluate_policy(env, agent, deterministic: bool = True,
 
                 total_return[i] += current_return[i]
                 current_return[i] = 0
-
-            if 'success' in info or 'is_success' in info:
-                success = info.get('success', info.get('is_success'))
-                has_success_metric = True
+            
                 # Some environments do not halt after `success`
                 # Thus, we only count the `success` at the end of the episode
                 success_rate[i] += success[i]
