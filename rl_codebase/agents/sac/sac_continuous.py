@@ -87,9 +87,9 @@ class ContinuousSAC(nn.Module):
     def alpha_loss(self, batch, log_ent_coef):
         with torch.no_grad():
             pi, log_pi = self.actor.sample(batch.states, compute_log_pi=True)
-        alpha_loss = -(log_ent_coef * (log_pi + self.target_entropy).detach()).mean()
-
-        self.current_entropy = -torch.mean(log_pi.detach()).item()
+            self.current_entropy = -torch.mean(log_pi).item()
+        alpha_loss = log_ent_coef * (self.current_entropy - self.target_entropy)
+        # alpha_loss = -(log_ent_coef * (log_pi + self.target_entropy).detach()).mean()
         
         return alpha_loss
 
