@@ -107,7 +107,7 @@ class DiscreteSAC(nn.Module):
 
     def update(self, batch):
         # Update critic
-        critic_loss = self.critic_loss(batch, self.log_ent_coef)
+        critic_loss = self.critic_loss(batch, self.log_ent_coef.detach())
 
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
@@ -116,7 +116,7 @@ class DiscreteSAC(nn.Module):
         self.critic.polyak_update(self.tau)
 
         # Update actor
-        actor_loss = self.actor_loss(batch, self.log_ent_coef)
+        actor_loss = self.actor_loss(batch, self.log_ent_coef.detach())
 
         self.actor_optimizer.zero_grad()
         actor_loss.backward()

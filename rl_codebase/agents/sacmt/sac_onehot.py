@@ -99,7 +99,7 @@ class OnehotSAC(nn.Module):
         # Update critic
         for i, batch_of_task in enumerate(batch_of_tasks):
             # critic
-            critic_loss = self.sac_agent.critic_loss(batch_of_task, self.log_ent_coef[i])
+            critic_loss = self.sac_agent.critic_loss(batch_of_task, self.log_ent_coef[i].detach())
             critic_losses.append(critic_loss)
 
         critic_loss = self._optimize(critic_losses, self.critic_optimizer)
@@ -108,7 +108,7 @@ class OnehotSAC(nn.Module):
         # Update actor
         for i, batch_of_task in enumerate(batch_of_tasks):
             # actor
-            actor_loss = self.sac_agent.actor_loss(batch_of_task, self.log_ent_coef[i])
+            actor_loss = self.sac_agent.actor_loss(batch_of_task, self.log_ent_coef[i].detach())
             actor_losses.append(actor_loss)
 
         actor_loss = self._optimize(actor_losses, self.actor_optimizer)
