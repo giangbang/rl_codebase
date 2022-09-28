@@ -7,8 +7,8 @@ from rl_codebase.core.utils import get_obs_shape, get_action_dim
 class VecEnv(SyncVectorEnv):
     """
     `VectorEnv` class of openai gym does not allow the difference
-    in `observation_space` of environments being batched, this is 
-    not necessarily desirable in multi-task environments, since 
+    in `observation_space` of environments being batched, this is
+    not necessarily desirable in multi-task environments, since
     different env can have different range of the observation states.
     Metaworld env is one example. We only check shape of observation
     and action in this class.
@@ -34,8 +34,13 @@ class VecEnv(SyncVectorEnv):
                 )
 
         return True
-        
+
 class DummyVecEnv(VecEnv):
+    """
+    Equivalent class to `SyncVectorEnv` of `gym`,
+    implemented in simple and straight forward way
+    used for debugging purpose only
+    """
     def reset(self):
         obs_shape = self.single_observation_space.shape
         states = []
@@ -49,31 +54,34 @@ class DummyVecEnv(VecEnv):
         next_states, rewards, dones, infos = [], [], [], []
         for i, (env , action) in enumerate(zip(self.envs, actions)):
             next_state, reward, done, info = env.step(action)
-            
+
             if done:
                 info.update({'final_observation': next_state})
                 next_state = env.reset()
-            
+
             next_states.append(next_state)
             rewards.append(reward)
             dones.append(done)
             infos.append(info)
-            
+
             infos_key.update(info.keys())
-        
+
         info_return = {}
         for key in infos_key:
             val = []
             for inf in infos:
                 val.append(inf.get(key, None))
             info_return[key] = np.array(val)
-            
+
         return (np.array(next_states).reshape(self.num_envs, *obs_shape),
                np.array(rewards).reshape(self.num_envs,),
                np.array(dones).reshape(self.num_envs,),
                info_return)
 
 def wrap_vec_env(env):
+    """
+    Wrap a (list) of environments to a vectorized environment
+    """
     if isinstance(env, gym.vector.VectorEnv):
         return env
     if not isinstance(env, list):

@@ -36,9 +36,10 @@ def collect_transitions(env, agent, total_timesteps, start_step, eval_freq: int 
     episode_lengths = np.zeros((env.num_envs,), dtype=float)
 
     num_episode = 0
-    rewards_episode_buffer = [deque(maxlen=50) for _ in range(env.num_envs)]
-    lengths_episode_buffer = [deque(maxlen=50) for _ in range(env.num_envs)]
-    success_count_buffer = [deque(maxlen=50) for _ in range(env.num_envs)]
+    window_size = 50
+    rewards_episode_buffer = [deque(maxlen=window_size) for _ in range(env.num_envs)]
+    lengths_episode_buffer = [deque(maxlen=window_size) for _ in range(env.num_envs)]
+    success_count_buffer = [deque(maxlen=window_size) for _ in range(env.num_envs)]
 
     has_success_metric = False  # Some envs do not support success measure
 

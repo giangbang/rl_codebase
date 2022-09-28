@@ -21,8 +21,6 @@ class SAC(OffPolicyAgent):
             batch_size: int = 256,
             tau: float = 0.005,
             gamma: float = 0.99,
-            num_layers=3,
-            hidden_dim=256,
             device: str = 'cpu',
             log_path=None,
             **kwargs,
@@ -37,8 +35,6 @@ class SAC(OffPolicyAgent):
                       learning_rate=learning_rate,
                       gamma=gamma,
                       tau=tau,
-                      num_layers=num_layers,
-                      hidden_dim=hidden_dim,
                       device=device,
                       **kwargs, # This might includes `init_temperature`
             )
@@ -61,7 +57,7 @@ class SAC(OffPolicyAgent):
                 update_report = a.update(task_batch)
 
                 report.update(update_report)
-                
+
         return report.to_dict()
 
     def save(self, model_dir, step):
