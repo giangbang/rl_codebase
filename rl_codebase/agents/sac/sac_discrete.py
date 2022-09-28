@@ -20,6 +20,8 @@ class DiscreteSAC(nn.Module):
             device='cpu',
             target_entropy_ratio=0.3,
             adam_eps: float = 1e-8,
+            actor_activation_fn=nn.ReLU,
+            critic_activation_fn=nn.Tanh,
             **kwargs,
     ):
         super().__init__()
@@ -28,9 +30,10 @@ class DiscreteSAC(nn.Module):
         self.device = device
 
         self.actor = DiscreteSACActor(observation_space, action_space, num_layers,
-                                      hidden_dim).to(device)
+                    hidden_dim, activation_fn=actor_activation_fn).to(device)
 
-        self.critic = Critic(observation_space, action_space, num_layers, hidden_dim).to(device)
+        self.critic = Critic(observation_space, action_space, num_layers, 
+                    hidden_dim, activation_fn=critic_activation_fn).to(device)
 
         self.target_entropy = np.log(action_space.n) * target_entropy_ratio
 

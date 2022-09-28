@@ -22,6 +22,8 @@ class ContinuousSAC(nn.Module):
             hidden_dim=256,
             init_temperature=.2,
             device='cpu',
+            actor_activation_fn=nn.ReLU,
+            critic_activation_fn=nn.Tanh,
             **kwargs,
     ):
         super().__init__()
@@ -30,9 +32,10 @@ class ContinuousSAC(nn.Module):
         self.device = device
 
         self.actor = ContinuousSACActor(observation_space, action_space, num_layers,
-                                        hidden_dim).to(device)
+                hidden_dim, activation_fn=actor_activation_fn).to(device)
 
-        self.critic = Critic(observation_space, action_space, num_layers, hidden_dim).to(device)
+        self.critic = Critic(observation_space, action_space, num_layers, 
+                hidden_dim, activation_fn=critic_activation_fn).to(device)
 
         # Target entropy from the paper
         self.target_entropy = -np.prod(action_space.shape)

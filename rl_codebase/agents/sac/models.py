@@ -18,12 +18,13 @@ class DiscreteSACActor(nn.Module):
             action_space: gym.spaces,
             num_layer: int = 3,
             hidden_dim=256,
+            activation_fn=nn.ReLU,
     ):
         super().__init__()
         assert isinstance(action_space, gym.spaces.Discrete)
         action_dim = action_space.n
         self.actor = create_net(observation_space, action_dim,
-                                num_layer, hidden_dim)
+                                num_layer, hidden_dim, activation_fn)
 
     def forward(self, x):
         return self.actor(x)
@@ -54,6 +55,7 @@ class ContinuousSACActor(nn.Module):
             action_space: gym.spaces,
             num_layer: int = 3,
             hidden_dim=256,
+            activation_fn=nn.ReLU,
     ):
         super().__init__()
         self.log_std_min = -20
@@ -61,7 +63,7 @@ class ContinuousSACActor(nn.Module):
         self.action_dim = get_action_dim(action_space)
 
         self.actor = create_net(observation_space, self.action_dim * 2,
-                                num_layer, hidden_dim)
+                                num_layer, hidden_dim, activation_fn)
 
     def forward(self, x):
         return self.actor(x).chunk(2, dim=-1)
@@ -138,11 +140,12 @@ class DualQNet(nn.Module):
         return v + a - a.mean(dim=1, keepdim=True)
 
 
-def create_q_net(inputs_dim, output_dim, num_layer, hidden_dim, use_dual_qnet=True):
+def create_q_net(inputs_dim, output_dim, num_layer, 
+        hidden_dim, use_dual_qnet=True, activation_fn=nn.Tanh):
     if use_dual_qnet:
-        return DualQNet(inputs_dim, output_dim, num_layer, hidden_dim)
+        return DualQNet(inputs_dim, output_dim, num_layer, hidden_dim, activation_fn)
     else:
-        return MLP(inputs_dim, output_dim, num_layer, hidden_dim)
+        return MLP(inputs_dim, output_dim, num_layer, hidden_dim, activation_fn)
 
 class DoubleQNet(nn.Module):
     def __init__(
@@ -151,6 +154,7 @@ class DoubleQNet(nn.Module):
             action_space: gym.spaces,
             num_layer: int = 3,
             hidden_dim=256,
+            activation_fn=nn.Tanh,
     ):
         super().__init__()
         state_dim = np.prod(get_obs_shape(observation_space))
@@ -163,11 +167,15 @@ class DoubleQNet(nn.Module):
         output_dim = 1 if not self.is_discrete_action else action_space.n
 
         if self.is_discrete_action:
-            self.q1 = create_q_net(inputs_dim, output_dim, num_layer, hidden_dim, True)
-            self.q2 = create_q_net(inputs_dim, output_dim, num_layer, hidden_dim, True)
+            self.q1 = create_q_net(inputs_dim, output_dim, 
+                    num_layer, hidden_dim, True, activation_fn)
+            self.q2 = create_q_net(inputs_dim, output_dim, 
+                    num_layer, hidden_dim, True, activation_fn)
         else:
-            self.q1 = MLP(inputs_dim, output_dim, num_layer, hidden_dim)
-            self.q2 = MLP(inputs_dim, output_dim, num_layer, hidden_dim)
+            self.q1 = MLP(inputs_dim, output_dim, 
+                    num_layer, hidden_dim, activation_fn)
+            self.q2 = MLP(inputs_dim, output_dim, 
+                    num_layer, hidden_dim, activation_fn)
 
     def forward(self, x, a=None):
         if not self.is_discrete_action:
@@ -184,11 +192,14 @@ class Critic(nn.Module):
             action_space: gym.spaces,
             num_layer: int = 3,
             hidden_dim=256,
+            activation_fn=nn.Tanh
     ):
         super().__init__()
 
-        self._online_q = DoubleQNet(observation_space, action_space, num_layer, hidden_dim)
-        self._target_q = DoubleQNet(observation_space, action_space, num_layer, hidden_dim)
+        self._online_q = DoubleQNet(observation_space, action_space, 
+                    num_layer, hidden_dim, activation_fn)
+        self._target_q = DoubleQNet(observation_space, action_space, 
+                    num_layer, hidden_dim, activation_fn)
 
         for param in self._target_q.parameters():
             param.requires_grad = False
