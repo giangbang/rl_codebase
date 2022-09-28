@@ -22,8 +22,8 @@ class ContinuousSAC(nn.Module):
             hidden_dim=256,
             init_temperature=.2,
             device='cpu',
-            actor_activation_fn=nn.ReLU,
-            critic_activation_fn=nn.Tanh,
+            actor_activation_fn=nn.Tanh,
+            critic_activation_fn=nn.ReLU,
             **kwargs,
     ):
         super().__init__()

@@ -20,8 +20,8 @@ class DiscreteSAC(nn.Module):
             device='cpu',
             target_entropy_ratio=0.3,
             adam_eps: float = 1e-8,
-            actor_activation_fn=nn.ReLU,
-            critic_activation_fn=nn.Tanh,
+            actor_activation_fn=nn.Tanh,
+            critic_activation_fn=nn.ReLU,
             **kwargs,
     ):
         super().__init__()

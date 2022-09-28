@@ -81,9 +81,10 @@ def evaluate_policy(env, agent, deterministic: bool = True,
                 total_return[i] += current_return[i]
                 current_return[i] = 0
             
-                # Some environments do not halt after `success`
-                # Thus, we only count the `success` at the end of the episode
-                success_rate[i] += success[i]
+                if has_success_metric:
+                    # Some environments do not halt after `success`
+                    # Thus, we only count the `success` at the end of the episode
+                    success_rate[i] += success[i]
 
         if save_vid:
             stop_record = np.bitwise_or(done, stop_record)
