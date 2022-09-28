@@ -51,6 +51,8 @@ class ContinuousSAC(nn.Module):
         self.ent_coef_optimizer = torch.optim.Adam(
             [self.log_ent_coef], lr=learning_rate
         )
+        
+        self.current_entropy = self.target_entropy
 
     def critic_loss(self, batch, log_ent_coef):
         # Compute target Q 
@@ -79,6 +81,7 @@ class ContinuousSAC(nn.Module):
             ent_coef = torch.exp(log_ent_coef)
 
         actor_loss = (ent_coef * log_pi - q_val).mean()
+        self.current_entropy = -torch.mean(log_pi.detach()).item()
 
         return actor_loss
 
@@ -117,7 +120,8 @@ class ContinuousSAC(nn.Module):
             'train.critic_loss': critic_loss.item(),
             'train.actor_loss': actor_loss.item(),
             'train.alpha_loss': alpha_loss.item(),
-            'train.alpha': torch.exp(self.log_ent_coef.detach()).item()
+            'train.alpha': torch.exp(self.log_ent_coef.detach()).item(),
+            'train.entropy': self.current_entropy,
         }
 
     def select_action(self, state, deterministic=True):

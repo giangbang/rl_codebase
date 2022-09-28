@@ -122,4 +122,10 @@ class ReplayBuffer(object):
         return batch_return
 
     def _discard_env_dimension(self, transitions: BufferTransition):
-        return Transition(*map(lambda x: x.squeeze(axis=1), transitions))
+        return return Transition(
+            transitions.states.squeeze(dim=1),
+            transitions.actions.squeeze(dim=1),
+            transitions.rewards.squeeze(dim=1),
+            transitions.next_states.squeeze(dim=1),
+            transitions.dones.squeeze(dim=1)
+        )
