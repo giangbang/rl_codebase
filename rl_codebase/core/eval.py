@@ -86,7 +86,7 @@ def evaluate_policy(env, agent, deterministic: bool = True,
                     # Thus, we only count the `success` at the end of the episode
                     success_rate[i] += success[i]
 
-        if save_vid:
+        if save_vid and not stop_record.all():
             stop_record = np.bitwise_or(done, stop_record)
             frames.append(_get_frames_from_VecEnv(env, stop_record))
 
