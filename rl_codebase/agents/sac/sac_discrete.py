@@ -15,12 +15,12 @@ class DiscreteSAC(nn.Module):
             gamma: float = 0.99,
             tau: float = 0.005,
             num_layers=3,
-            hidden_dim=256,
+            hidden_dim=64,
             init_temperature=1,
             device='cpu',
             target_entropy_ratio=0.3,
             adam_eps: float = 1e-8,
-            actor_activation_fn=nn.Tanh,
+            actor_activation_fn=nn.ReLU,
             critic_activation_fn=nn.ReLU,
             **kwargs,
     ):
@@ -32,7 +32,7 @@ class DiscreteSAC(nn.Module):
         self.actor = DiscreteSACActor(observation_space, action_space, num_layers,
                     hidden_dim, activation_fn=actor_activation_fn).to(device)
 
-        self.critic = Critic(observation_space, action_space, num_layers, 
+        self.critic = Critic(observation_space, action_space, num_layers,
                     hidden_dim, activation_fn=critic_activation_fn).to(device)
 
         self.target_entropy = np.log(action_space.n) * target_entropy_ratio
@@ -51,11 +51,11 @@ class DiscreteSAC(nn.Module):
         self.ent_coef_optimizer = torch.optim.Adam(
             [self.log_ent_coef], lr=learning_rate, eps=adam_eps
         )
-        
+
         self.current_policy_entropy = np.log(action_space.n)
 
     def critic_loss(self, batch, log_ent_coef):
-        # Compute target Q 
+        # Compute target Q
         with torch.no_grad():
             next_pi, next_entropy = self.actor.probs(batch.next_states, compute_log_pi=True)
 
@@ -103,7 +103,7 @@ class DiscreteSAC(nn.Module):
         alpha_loss = -(
                 log_ent_coef * (-entropy + self.target_entropy).detach()
         ).mean()
-        
+
         self.current_policy_entropy = torch.mean(entropy).item()
 
         return alpha_loss
@@ -139,7 +139,7 @@ class DiscreteSAC(nn.Module):
             'train.alpha': torch.exp(self.log_ent_coef.detach()).item(),
             'train.entropy': self.current_policy_entropy
         }
-        
+
     def select_action(self, state, deterministic=False):
         with torch.no_grad():
             state = torch.FloatTensor(state).to(self.device)

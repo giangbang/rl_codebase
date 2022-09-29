@@ -22,8 +22,8 @@ class ContinuousSAC(nn.Module):
             hidden_dim=256,
             init_temperature=.2,
             device='cpu',
-            actor_activation_fn=nn.Tanh,
-            critic_activation_fn=nn.ReLU,  
+            actor_activation_fn=nn.ReLU,
+            critic_activation_fn=nn.ReLU,
             **kwargs,
     ):
         super().__init__()
@@ -33,6 +33,7 @@ class ContinuousSAC(nn.Module):
 
         self.actor = ContinuousSACActor(observation_space, action_space, num_layers,
                 hidden_dim, activation_fn=actor_activation_fn).to(device)
+
 
         # Using Tanh as activation function for Q function does not yield 
         # high performance for some environments
@@ -56,11 +57,11 @@ class ContinuousSAC(nn.Module):
         self.ent_coef_optimizer = torch.optim.Adam(
             [self.log_ent_coef], lr=learning_rate
         )
-        
+
         self.current_entropy = self.target_entropy
 
     def critic_loss(self, batch, log_ent_coef):
-        # Compute target Q 
+        # Compute target Q
         with torch.no_grad():
             next_pi, next_log_pi = self.actor.sample(batch.next_states, compute_log_pi=True)
             next_q_vals = self.critic.target_q(batch.next_states, next_pi)
@@ -95,7 +96,7 @@ class ContinuousSAC(nn.Module):
             self.current_entropy = -torch.mean(log_pi).item()
         alpha_loss = log_ent_coef * (self.current_entropy - self.target_entropy)
         # alpha_loss = -(log_ent_coef * (log_pi + self.target_entropy).detach()).mean()
-        
+
         return alpha_loss
 
     def update(self, batch):
