@@ -23,7 +23,7 @@ class ContinuousSAC(nn.Module):
             init_temperature=.2,
             device='cpu',
             actor_activation_fn=nn.Tanh,
-            critic_activation_fn=nn.ReLU,
+            critic_activation_fn=nn.ReLU,  
             **kwargs,
     ):
         super().__init__()
@@ -34,6 +34,8 @@ class ContinuousSAC(nn.Module):
         self.actor = ContinuousSACActor(observation_space, action_space, num_layers,
                 hidden_dim, activation_fn=actor_activation_fn).to(device)
 
+        # Using Tanh as activation function for Q function does not yield 
+        # high performance for some environments
         self.critic = Critic(observation_space, action_space, num_layers, 
                 hidden_dim, activation_fn=critic_activation_fn).to(device)
 
