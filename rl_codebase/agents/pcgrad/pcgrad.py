@@ -23,10 +23,9 @@ class CorePCGrad(OnehotSAC):
             learning_rate: float = 3e-4,
             gamma: float = 0.99,
             tau: float = 0.005,
-            num_layers=3,
-            hidden_dim=256,
-            init_temperature=.2,
-            device='cpu', ):
+            device='cpu', 
+            **kwargs,
+    ):
         super().__init__(
             sac_agent_cls=sac_agent_cls,
             observation_space=observation_space,
@@ -35,10 +34,8 @@ class CorePCGrad(OnehotSAC):
             learning_rate=learning_rate,
             gamma=gamma,
             tau=tau,
-            num_layers=num_layers,
-            hidden_dim=hidden_dim,
-            init_temperature=init_temperature,
-            device=device
+            device=device,
+            **kwargs,
         )
 
         # Wrap with pcgrad optimizer

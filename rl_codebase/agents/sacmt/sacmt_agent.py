@@ -15,9 +15,6 @@ class SACMT(OffPolicyAgent):
             batch_size: int = 256,
             tau: float = 0.005,
             gamma: float = 0.99,
-            num_layers=3,
-            hidden_dim=256,
-            init_temperature=.2,
             device: str = 'cpu',
             log_path=None,
             **kwargs
@@ -34,10 +31,8 @@ class SACMT(OffPolicyAgent):
             learning_rate=learning_rate,
             gamma=gamma,
             tau=tau,
-            num_layers=num_layers,
-            hidden_dim=hidden_dim,
-            init_temperature=init_temperature,
-            device=device
+            device=device,
+            **kwargs
         )
 
     def update(self, buffer, gradient_steps: int = 1):

@@ -8,18 +8,21 @@ from rl_codebase.agents.sac import Critic
 
 
 class ContinuousDistral(nn.Module):
-    def __init__(self,
-                 observation_space: gym.spaces,
-                 action_space: gym.spaces,
-                 learning_rate: float = 3e-4,
-                 gamma: float = 0.99,
-                 tau: float = 0.005,
-                 num_layers=3,
-                 hidden_dim=256,
-                 alpha: float = 0.5,  # Hyper param for distral
-                 beta: float = 5,  # Hyper param for distral
-                 device='cpu',
-                 **kwargs
+    def __init__(
+            self,
+            observation_space: gym.spaces,
+            action_space: gym.spaces,
+            learning_rate: float = 3e-4,
+            gamma: float = 0.99,
+            tau: float = 0.005,
+            num_layers=3,
+            hidden_dim=256,
+            alpha: float = 0.5,  # Hyper param for distral
+            beta: float = 5,  # Hyper param for distral
+            device='cpu',
+            actor_activation_fn=nn.ReLU,
+            critic_activation_fn=nn.ReLU,
+            **kwargs,
     ):
         super().__init__()
         self.gamma = gamma
@@ -29,9 +32,10 @@ class ContinuousDistral(nn.Module):
         self.alpha = alpha
 
         self.actor = ContinuousDistralActor(observation_space, action_space, num_layers,
-                                            hidden_dim).to(device)
+                        hidden_dim, activation_fn=actor_activation_fn).to(device)
 
-        self.critic = Critic(observation_space, action_space, num_layers, hidden_dim).to(device)
+        self.critic = Critic(observation_space, action_space, num_layers, 
+                        hidden_dim, activation_fn=critic_activation_fn).to(device)
 
         self.actor_optimizer = torch.optim.Adam(
             self.actor.parameters(), lr=learning_rate,

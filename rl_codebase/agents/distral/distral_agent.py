@@ -22,8 +22,6 @@ class Distral(OffPolicyAgent):
             gamma: float = 0.99,
             alpha: float = 0.5,
             beta: float = 5,
-            num_layers=3,
-            hidden_dim=256,
             device: str = 'cpu',
             log_path=None,
             **kwargs,
@@ -37,11 +35,10 @@ class Distral(OffPolicyAgent):
             learning_rate=learning_rate,
             gamma=gamma,
             tau=tau,
-            num_layers=num_layers,
-            hidden_dim=hidden_dim,
             alpha=alpha,
             beta=beta,
-            device=device
+            device=device,
+            **kwargs,
         )
 
         distral_cls = DiscreteDistral if isinstance(self.action_space, gym.spaces.Discrete) else ContinuousDistral

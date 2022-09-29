@@ -40,10 +40,9 @@ class OnehotSAC(nn.Module):
             learning_rate: float = 3e-4,
             gamma: float = 0.99,
             tau: float = 0.005,
-            num_layers=3,
-            hidden_dim=256,
-            init_temperature=.2,
-            device='cpu', ):
+            device='cpu', 
+            **kwargs,
+    ):
         super().__init__()
         self.device = device
         self.num_envs = num_envs
@@ -57,9 +56,7 @@ class OnehotSAC(nn.Module):
             learning_rate=learning_rate,
             gamma=gamma,
             tau=tau,
-            num_layers=num_layers,
-            hidden_dim=hidden_dim,
-            init_temperature=init_temperature
+            **kwargs,
         )
 
         # Create aliases
@@ -119,7 +116,7 @@ class OnehotSAC(nn.Module):
             alpha_loss = self.sac_agent.alpha_loss(batch_of_task, self.log_ent_coef[i])
             alpha_losses.append(alpha_loss)
 
-        alpha_loss = sum(alpha_losses) / len(alpha_losses)
+        alpha_loss = sum(alpha_losses)
         self.ent_coef_optimizer.zero_grad()
         alpha_loss.backward()
         self.ent_coef_optimizer.step()
