@@ -11,6 +11,11 @@ from rl_codebase.core import (
 )
 
 
+def init_weights(m):
+    if type(m) == nn.Linear:
+        torch.nn.init.xavier_uniform_(m.weight)
+        m.bias.data.fill_(1e-8)
+
 class DiscreteSACActor(nn.Module):
     def __init__(
             self,
@@ -24,7 +29,7 @@ class DiscreteSACActor(nn.Module):
         assert isinstance(action_space, gym.spaces.Discrete)
         action_dim = action_space.n
         self.actor = create_net(observation_space, action_dim,
-                                num_layer, hidden_dim, activation_fn)
+                        num_layer, hidden_dim, activation_fn).apply(init_weights)
 
     def forward(self, x):
         return self.actor(x)
@@ -63,7 +68,7 @@ class ContinuousSACActor(nn.Module):
         self.action_dim = get_action_dim(action_space)
 
         self.actor = create_net(observation_space, self.action_dim * 2,
-                                num_layer, hidden_dim, activation_fn)
+                        num_layer, hidden_dim, activation_fn).apply(init_weights)
 
     def forward(self, x):
         return self.actor(x).chunk(2, dim=-1)
