@@ -62,6 +62,7 @@ class DiscreteSAC(nn.Module):
             next_q_vals = self.critic.target_q(batch.next_states)
             next_q_val = torch.minimum(*next_q_vals)
 
+            assert next_q_val.shape == next_pi.shape
             next_q_val = (next_q_val * next_pi).sum(
                 dim=1, keepdims=True
             )
@@ -90,6 +91,7 @@ class DiscreteSAC(nn.Module):
         with torch.no_grad():
             ent_coef = torch.exp(log_ent_coef)
 
+        assert pi.shape == q_val.shape
         actor_loss = (pi * q_val).sum(
             dim=1, keepdims=True
         ) + ent_coef * ent.reshape(-1, 1)
