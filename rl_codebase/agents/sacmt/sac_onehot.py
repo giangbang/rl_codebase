@@ -41,6 +41,7 @@ class OnehotSAC(nn.Module):
             gamma: float = 0.99,
             tau: float = 0.005,
             device='cpu', 
+            init_temperature=1,
             **kwargs,
     ):
         super().__init__()
