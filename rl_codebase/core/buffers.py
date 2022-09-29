@@ -83,11 +83,11 @@ class ReplayBuffer(object):
         np.copyto(self.next_obses[self.idx], next_obs)
         np.copyto(self.dones[self.idx], done)
 
-        if info is not None:
-            timeout_shape = self.dones.shape[1:]
+        if info is not None and 'TimeLimit.truncated' in info:
+            truncate = info.get('TimeLimit.truncated')
             # [Important] Handle timeout separately for infinite horizon
-            timeout = info.get("TimeLimit.truncated", np.zeros(timeout_shape, dtype=bool))
-            self.dones[self.idx] *= (1 - timeout).reshape(timeout_shape)
+            for i, d in enumerate(done):
+                if d.item(): self.dones[self.idx, i] = 1-truncate[i] 
 
         self.idx = (self.idx + 1) % self.capacity
         self.full = self.full or self.idx == 0
