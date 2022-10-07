@@ -16,4 +16,7 @@ setup(
         "matplotlib",
         "opencv-python",
     ],
+    entry_points = {
+        'console_scripts': ['train=rl_codebase.train:main'],
+    },
 )

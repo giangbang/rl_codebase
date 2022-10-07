@@ -13,6 +13,7 @@ from abc import ABC, abstractmethod
 import torch
 import gym
 import numpy as np
+import os
 
 
 class BaseAgent(ABC):
@@ -80,7 +81,29 @@ class BaseAgent(ABC):
         """
         Set training mode
         """
-
+        
+    def save(self, log_path=None, file_name="model.pkl"):
+        if log_path is None: log_path = self.log_path
+        if not file_name.endswith(".pkl"): file_name += ".pkl"
+        
+        os.makedirs(log_path, exist_ok=True)
+        log_path = os.path.join(log_path, file_name)
+        
+        import pickle
+        output = open(log_path, 'wb')
+        pickle.dump(self, output, -1)
+        output.close()
+        
+    @classmethod
+    def load(cls, log_path, file_name="model.pkl"):
+        import pickle
+        if not file_name.endswith(".pkl"): file_name += ".pkl"
+        log_path = os.path.join(log_path, file_name)
+        
+        pkl_file = open(log_path, 'rb')
+        agent = pickle.load(pkl_file)
+        pkl_file.close()
+        return agent
 
 class OffPolicyAgent(BaseAgent, ABC):
     def __init__(
