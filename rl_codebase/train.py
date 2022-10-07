@@ -50,7 +50,7 @@ def main():
         raise ValueError(f"{args.algs} is not defined")
     agent = cls(env, eval_env, **kwargs)
     agent.learn(**kwargs)
-    agent.save()
+    agent.save("model", args.total_timesteps)
     
     
 if __name__ == "__main__":
