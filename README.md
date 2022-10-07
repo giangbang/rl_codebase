@@ -65,9 +65,9 @@ for name, env_cls in benchmark.train_classes.items():
 agent = SAC(train_envs, eval_envs, log_path='logging')
 agent.learn(total_timesteps=1_000_000, start_step=1000, eval_freq=2000)
 ```
-Alternatively, training can also be called from command line,
+Alternatively, training can also be called from command line (only used for simple environments that can be created by gym given `id`)
 ```
-train --env_name CartPole --total_timesteps 100000 --learning_rate 3e-4 
+train --env_name CartPole-v0 --algs SAC --total_timesteps 100000 --learning_rate 3e-4 --log_path logging
 ```
 ### Logging format
 An example of the logger output when training with `PCGrad` on [metaworld](https://github.com/rlworkgroup/metaworld).
@@ -83,5 +83,5 @@ train.actor_loss     : -0.73
 train.alpha_loss     : -18.75
 train.alpha          : 0.06
 eval.rewards         : 494.47
-eval.success         : 24.15
+eval.success         : 0.00
 ```

@@ -12,6 +12,7 @@ def main():
     parser.add_argument('--total_timesteps', default=1000000, type=int)
     parser.add_argument('--batch_size', default=256, type=int)
     parser.add_argument('--hidden_dim', default=256, type=int)
+    parser.add_argument('--eval_freq', default=5000, type=int)
     parser.add_argument('--gradient_steps', default=1, type=int)
 
     parser.add_argument('--n_eval_episodes', default=10, type=int)
@@ -25,6 +26,7 @@ def main():
     parser.add_argument('--seed', default=-1, type=int)
     
     args, unknown = parser.parse_known_args()
+    unknown = list(map(lambda x : x.lstrip("-"), unknown))
     unknown = dict(zip(unknown[:-1:2],unknown[1::2]))
     kwargs = vars(args)
     kwargs.update(unknown)
@@ -49,6 +51,7 @@ def main():
     except:
         raise ValueError(f"{args.algs} is not defined")
     agent = cls(env, eval_env, **kwargs)
+    print(kwargs)
     agent.learn(**kwargs)
     agent.save("model", args.total_timesteps)
     
