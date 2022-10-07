@@ -65,6 +65,10 @@ for name, env_cls in benchmark.train_classes.items():
 agent = SAC(train_envs, eval_envs, log_path='logging')
 agent.learn(total_timesteps=1_000_000, start_step=1000, eval_freq=2000)
 ```
+Alternatively, training can also be called from command line,
+```
+train --env_name CartPole --total_timesteps 100000 --learning_rate 3e-4 
+```
 ### Logging format
 An example of the logger output when training with `PCGrad` on [metaworld](https://github.com/rlworkgroup/metaworld).
 
