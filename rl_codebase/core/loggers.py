@@ -63,7 +63,8 @@ class Logger:
             self.csv_file.flush()
 
     def dump_file(self):
-        self.csv_file.flush()
+        if self.log_to_file:
+            self.csv_file.flush()
 
 
 def _maybe_float_roundoff(n):

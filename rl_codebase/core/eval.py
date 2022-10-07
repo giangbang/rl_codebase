@@ -8,7 +8,8 @@ from rl_codebase.core.utils import get_time_now_as_str
 
 def evaluate_policy(env, agent, deterministic: bool = True,
                     num_eval_episodes: int = 10, save_video_to: str = None,
-                    report_separated_task: bool = False, task_names: List[str] = None
+                    report_separated_task: bool = False, task_names: List[str] = None,
+                    **kwargs,
                     ):
     """
     Evaluate the `agent` on the given `env`.
